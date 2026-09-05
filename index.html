@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="theme-color" content="#007AFF">
+  <meta name="theme-color" content="#0A84FF">
   <meta name="description" content="Higercoin Terminal Pro - Bitcoin portföy izleme ve AI analiz platformu">
   <title>Higercoin Terminal Pro</title>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -11,26 +11,48 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <style>
     :root {
-      --green: #34C759;
-      --red: #FF3B30;
-      --blue: #007AFF;
-      --orange: #FF9500;
-      --purple: #A855F7;
-      --radius-lg: 20px;
+      /* Core palette — soft pastel Apple-style */
+      --blue: #0A84FF;
+      --blue-soft: #64B5FF;
+      --green: #30D158;
+      --red: #FF453A;
+      --orange: #FF9F0A;
+      --purple: #BF5AF2;
+      --teal: #64D2FF;
+      --pink: #FF6B9D;
+
+      --radius-xl: 28px;
+      --radius-lg: 22px;
       --radius-md: 16px;
       --radius-sm: 12px;
-      --shadow: 0 8px 32px rgba(0,0,0,0.05);
-      --shadow-lg: 0 20px 60px rgba(0,0,0,0.1);
-      --shadow-xl: 0 30px 80px rgba(0,0,0,0.15);
-      --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-      --glass-light: rgba(255,255,255,0.7);
-      --glass-border-light: rgba(255,255,255,0.5);
-      --glass-dark: rgba(25,25,30,0.8);
-      --glass-border-dark: rgba(255,255,255,0.1);
-      --text-light: #1c1c1e;
+      --radius-xs: 8px;
+
+      --shadow-sm: 0 2px 12px rgba(20,20,40,0.04);
+      --shadow: 0 8px 30px rgba(20,20,40,0.06);
+      --shadow-lg: 0 20px 60px rgba(20,20,40,0.10);
+      --shadow-xl: 0 30px 90px rgba(20,20,40,0.16);
+
+      --font: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      --font-mono: 'SF Mono', ui-monospace, 'Roboto Mono', monospace;
+
+      /* Glass surfaces */
+      --glass: rgba(255,255,255,0.55);
+      --glass-strong: rgba(255,255,255,0.72);
+      --glass-border: rgba(255,255,255,0.6);
+      --glass-dark: rgba(30,30,38,0.55);
+      --glass-dark-strong: rgba(30,30,38,0.72);
+      --glass-border-dark: rgba(255,255,255,0.08);
+
+      --text: #1c1c1e;
       --text-dark: #f5f5f7;
-      --sub-light: rgba(60,60,67,0.7);
-      --sub-dark: rgba(240,240,245,0.7);
+      --sub: rgba(60,60,67,0.62);
+      --sub-dark: rgba(235,235,245,0.6);
+      --tertiary: rgba(60,60,67,0.4);
+      --tertiary-dark: rgba(235,235,245,0.38);
+
+      --bg-grad-1: #eef4ff;
+      --bg-grad-2: #fdf1fb;
+      --bg-grad-3: #fff8ec;
     }
 
     * {
@@ -43,68 +65,82 @@
       margin: 0;
       padding: 0;
       width: 100%;
-      height: 100%;
+      min-height: 100%;
     }
 
     body {
       font-family: var(--font);
-      color: var(--text-light);
+      color: var(--text);
       min-height: 100vh;
-      background: linear-gradient(135deg, #f5f7fa 0%, #f0e9ff 100%);
-      transition: background 0.3s ease, color 0.3s ease;
-      padding: 0;
+      background: linear-gradient(160deg, var(--bg-grad-1) 0%, var(--bg-grad-2) 55%, var(--bg-grad-3) 100%);
+      transition: background 0.4s ease, color 0.4s ease;
       position: relative;
       overflow-x: hidden;
     }
 
     body.dark {
       color: var(--text-dark);
-      background: linear-gradient(135deg, #0a0a0e 0%, #1a1530 100%);
+      background: linear-gradient(160deg, #08080d 0%, #14101f 55%, #191325 100%);
     }
 
-    /* Animated background orbs */
-    body::before,
-    body::after {
-      content: "";
+    /* Ambient floating orbs */
+    .orb {
       position: fixed;
       border-radius: 50%;
-      filter: blur(100px);
+      filter: blur(90px);
       z-index: 0;
-      opacity: 0.4;
       pointer-events: none;
-      animation: float 20s ease-in-out infinite;
+      animation: drift 24s ease-in-out infinite;
+      transition: opacity 0.4s ease;
     }
 
-    body::before {
-      width: 600px;
-      height: 600px;
-      top: -200px;
-      left: -200px;
-      background: radial-gradient(circle, #c3e7ff 0%, transparent 70%);
+    .orb-1 {
+      width: 55vw;
+      max-width: 520px;
+      height: 55vw;
+      max-height: 520px;
+      top: -15%;
+      left: -15%;
+      background: radial-gradient(circle, rgba(100,181,255,0.35) 0%, transparent 70%);
+      opacity: 0.9;
     }
 
-    body::after {
-      width: 500px;
-      height: 500px;
-      bottom: -150px;
-      right: -150px;
-      background: radial-gradient(circle, #e6d5ff 0%, transparent 70%);
-      animation-delay: -5s;
+    .orb-2 {
+      width: 50vw;
+      max-width: 480px;
+      height: 50vw;
+      max-height: 480px;
+      bottom: -18%;
+      right: -12%;
+      background: radial-gradient(circle, rgba(191,90,242,0.28) 0%, transparent 70%);
+      animation-delay: -8s;
+      opacity: 0.85;
     }
 
-    body.dark::before {
-      background: radial-gradient(circle, #1a4d6d 0%, transparent 70%);
+    .orb-3 {
+      width: 38vw;
+      max-width: 360px;
+      height: 38vw;
+      max-height: 360px;
+      top: 40%;
+      left: 60%;
+      background: radial-gradient(circle, rgba(255,159,10,0.16) 0%, transparent 70%);
+      animation-delay: -14s;
+      opacity: 0.6;
     }
 
-    body.dark::after {
-      background: radial-gradient(circle, #3d1a5c 0%, transparent 70%);
+    body.dark .orb-1 { background: radial-gradient(circle, rgba(10,132,255,0.25) 0%, transparent 70%); }
+    body.dark .orb-2 { background: radial-gradient(circle, rgba(191,90,242,0.22) 0%, transparent 70%); }
+    body.dark .orb-3 { background: radial-gradient(circle, rgba(255,159,10,0.12) 0%, transparent 70%); }
+
+    @keyframes drift {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      33% { transform: translate(4%, -4%) scale(1.05); }
+      66% { transform: translate(-3%, 3%) scale(0.97); }
     }
 
-    @keyframes float {
-      0%, 100% { transform: translate(0, 0); }
-      25% { transform: translate(30px, -30px); }
-      50% { transform: translate(0, -60px); }
-      75% { transform: translate(-30px, -30px); }
+    @media (prefers-reduced-motion: reduce) {
+      .orb { animation: none; }
     }
 
     .page-wrapper {
@@ -116,447 +152,323 @@
     }
 
     .container {
-      max-width: 800px;
+      max-width: 820px;
       width: 100%;
       margin: 0 auto;
-      padding: 24px 16px 100px;
+      padding: 22px 16px 110px;
       flex: 1;
     }
 
+    /* ============ HEADER ============ */
     header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 32px;
+      margin-bottom: 28px;
       gap: 12px;
     }
 
     .brand {
       flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 12px;
     }
 
-    .brand h1 {
+    .brand-mark {
+      width: 42px;
+      height: 42px;
+      border-radius: 13px;
+      background: linear-gradient(135deg, var(--blue) 0%, var(--purple) 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      box-shadow: 0 6px 18px rgba(10,132,255,0.28);
+      flex-shrink: 0;
+    }
+
+    .brand-text h1 {
       margin: 0;
-      font-size: 26px;
+      font-size: 19px;
       font-weight: 700;
-      letter-spacing: -0.5px;
-      background: linear-gradient(135deg, var(--blue), var(--purple));
+      letter-spacing: -0.3px;
+      line-height: 1.15;
+    }
+
+    .brand-text p {
+      margin: 2px 0 0 0;
+      font-size: 11.5px;
+      font-weight: 500;
+      color: var(--sub);
+      letter-spacing: 0.1px;
+    }
+
+    body.dark .brand-text p { color: var(--sub-dark); }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .status-indicator, .icon-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 17px;
+      border: 1px solid var(--glass-border);
+      background: var(--glass);
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      box-shadow: var(--shadow-sm);
+      transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+      cursor: pointer;
+      color: inherit;
+      position: relative;
+    }
+
+    body.dark .status-indicator, body.dark .icon-btn {
+      background: var(--glass-dark);
+      border-color: var(--glass-border-dark);
+    }
+
+    .status-indicator:hover, .icon-btn:hover {
+      transform: scale(1.08);
+      box-shadow: var(--shadow);
+    }
+
+    .icon-btn:active, .status-indicator:active {
+      transform: scale(0.94);
+    }
+
+    .status-indicator.connected::after,
+    .status-indicator.offline::after,
+    .status-indicator.syncing::after {
+      content: "";
+      position: absolute;
+      bottom: 1px;
+      right: 1px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      border: 2px solid #eef4ff;
+    }
+
+    body.dark .status-indicator::after { border-color: #14101f; }
+
+    .status-indicator.connected::after { background: var(--green); box-shadow: 0 0 6px rgba(48,209,88,0.6); }
+    .status-indicator.offline::after { background: var(--red); opacity: 0.7; }
+    .status-indicator.syncing { animation: pulse-sync 1.6s ease-in-out infinite; }
+    .status-indicator.syncing::after { background: var(--orange); }
+
+    @keyframes pulse-sync {
+      0% { box-shadow: 0 0 0 0 rgba(255,159,10,0.35); }
+      70% { box-shadow: 0 0 0 12px rgba(255,159,10,0); }
+      100% { box-shadow: 0 0 0 0 rgba(255,159,10,0); }
+    }
+
+    /* ============ STATUS BANNER ============ */
+    .status-banner {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      padding: 13px 16px;
+      border-radius: var(--radius-md);
+      margin-bottom: 20px;
+      font-size: 13px;
+      font-weight: 500;
+      animation: slideInDown 0.35s cubic-bezier(0.34, 1.1, 0.4, 1);
+      background: var(--glass);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      box-shadow: var(--shadow-sm);
+    }
+
+    body.dark .status-banner { background: var(--glass-dark); border-color: var(--glass-border-dark); }
+    .status-banner.visible { display: flex; }
+
+    @keyframes slideInDown {
+      from { opacity: 0; transform: translateY(-12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .status-banner.success { color: var(--green); border-left: 3px solid var(--green); }
+    .status-banner.error { color: var(--red); border-left: 3px solid var(--red); }
+    .status-banner.info { color: var(--blue); border-left: 3px solid var(--blue); }
+    .status-banner.warning { color: var(--orange); border-left: 3px solid var(--orange); }
+
+    /* ============ HERO ============ */
+    .hero {
+      text-align: center;
+      margin: 18px 0 36px;
+      animation: slideInDown 0.5s ease;
+    }
+
+    .hero-label {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.2px;
+      color: var(--sub);
+      margin-bottom: 10px;
+    }
+
+    body.dark .hero-label { color: var(--sub-dark); }
+
+    .hero-amount {
+      font-size: 52px;
+      font-weight: 600;
+      letter-spacing: -1.6px;
+      margin: 8px 0;
+      line-height: 1.05;
+      transition: all 0.4s ease;
+      background: linear-gradient(135deg, var(--text) 20%, var(--blue) 120%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
     }
 
-    .brand p {
-      margin: 4px 0 0 0;
-      font-size: 12px;
-      font-weight: 500;
-      color: var(--sub-light);
-      letter-spacing: 0.5px;
+    body.dark .hero-amount {
+      background: linear-gradient(135deg, var(--text-dark) 20%, var(--blue-soft) 120%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
 
-    body.dark .brand p {
-      color: var(--sub-dark);
-    }
-
-    .header-actions {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .status-indicator {
-      width: 44px;
-      height: 44px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 20px;
-      border: 2px solid var(--glass-border-light);
-      background: var(--glass-light);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      box-shadow: var(--shadow);
-      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-      position: relative;
-      cursor: pointer;
-    }
-
-    body.dark .status-indicator {
-      background: var(--glass-dark);
-      border-color: var(--glass-border-dark);
-    }
-
-    .status-indicator:hover {
-      transform: scale(1.08);
-      box-shadow: var(--shadow-lg);
-    }
-
-    .status-indicator.connected::after {
-      content: "";
-      position: absolute;
-      bottom: 2px;
-      right: 2px;
-      width: 12px;
-      height: 12px;
-      background: var(--green);
-      border: 2px solid white;
-      border-radius: 50%;
-      box-shadow: 0 0 8px rgba(52, 199, 89, 0.6);
-    }
-
-    body.dark .status-indicator.connected::after {
-      border-color: #191923;
-    }
-
-    .status-indicator.offline::after {
-      content: "";
-      position: absolute;
-      bottom: 2px;
-      right: 2px;
-      width: 12px;
-      height: 12px;
-      background: var(--red);
-      border: 2px solid white;
-      border-radius: 50%;
-      opacity: 0.6;
-    }
-
-    body.dark .status-indicator.offline::after {
-      border-color: #191923;
-    }
-
-    .status-indicator.syncing {
-      background: rgba(52, 199, 89, 0.1);
-      border-color: rgba(52, 199, 89, 0.3);
-      animation: pulse-sync 1.5s ease-in-out infinite;
-    }
-
-    @keyframes pulse-sync {
-      0% { box-shadow: 0 0 0 0 rgba(52, 199, 89, 0.7); }
-      70% { box-shadow: 0 0 0 15px rgba(52, 199, 89, 0); }
-      100% { box-shadow: 0 0 0 0 rgba(52, 199, 89, 0); }
-    }
-
-    .icon-btn {
-      width: 44px;
-      height: 44px;
-      border-radius: 50%;
-      border: 2px solid var(--glass-border-light);
-      background: var(--glass-light);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      box-shadow: var(--shadow);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 20px;
-      cursor: pointer;
-      color: inherit;
-      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-      border: none;
-    }
-
-    body.dark .icon-btn {
-      background: var(--glass-dark);
-      border-color: var(--glass-border-dark);
-    }
-
-    .icon-btn:hover {
-      transform: scale(1.1);
-      box-shadow: var(--shadow-lg);
-    }
-
-    .icon-btn:active {
-      transform: scale(0.95);
-    }
-
-    .hero {
-      text-align: center;
-      margin: 16px 0 40px;
-      animation: slideInDown 0.6s ease;
-    }
-
-    @keyframes slideInDown {
-      from {
-        opacity: 0;
-        transform: translateY(-20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    .hero-label {
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing: 1.2px;
-      text-transform: uppercase;
-      color: var(--blue);
-      margin-bottom: 12px;
-    }
-
-    .hero-amount {
-      font-size: 56px;
-      font-weight: 300;
-      letter-spacing: -2px;
-      margin: 12px 0;
-      line-height: 1;
-      transition: all 0.4s ease;
-    }
-
-    .hero-amount.loading {
-      opacity: 0.5;
-      filter: blur(4px);
-    }
+    .hero-amount.loading { opacity: 0.4; filter: blur(6px); }
 
     .hero-timestamp {
-      font-size: 13px;
-      color: var(--sub-light);
-      margin-top: 12px;
+      font-size: 12.5px;
+      color: var(--tertiary);
+      margin-top: 8px;
     }
 
-    body.dark .hero-timestamp {
-      color: var(--sub-dark);
+    body.dark .hero-timestamp { color: var(--tertiary-dark); }
+
+    /* ============ GLASS CARD BASE ============ */
+    .glass {
+      background: var(--glass);
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      border: 1px solid var(--glass-border);
+      box-shadow: var(--shadow);
     }
 
-    .status-banner {
-      display: none;
-      padding: 14px 16px;
-      border-radius: var(--radius-md);
-      margin-bottom: 24px;
-      font-size: 13px;
-      font-weight: 500;
-      animation: slideInDown 0.3s ease;
-      border-left: 4px solid;
+    body.dark .glass {
+      background: var(--glass-dark);
+      border-color: var(--glass-border-dark);
     }
 
-    .status-banner.visible {
-      display: block;
-    }
-
-    .status-banner.success {
-      background: rgba(52, 199, 89, 0.1);
-      border-color: var(--green);
-      color: var(--green);
-    }
-
-    .status-banner.error {
-      background: rgba(255, 59, 48, 0.1);
-      border-color: var(--red);
-      color: var(--red);
-    }
-
-    .status-banner.info {
-      background: rgba(0, 122, 255, 0.1);
-      border-color: var(--blue);
-      color: var(--blue);
-    }
-
-    .status-banner.warning {
-      background: rgba(255, 149, 0, 0.1);
-      border-color: var(--orange);
-      color: var(--orange);
-    }
-
+    /* ============ CARDS GRID ============ */
     .cards-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 16px;
-      margin-bottom: 32px;
+      grid-template-columns: repeat(auto-fit, minmax(148px, 1fr));
+      gap: 12px;
+      margin-bottom: 30px;
     }
 
     .card {
-      background: var(--glass-light);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 2px solid var(--glass-border-light);
       border-radius: var(--radius-lg);
-      box-shadow: var(--shadow);
-      padding: 20px 18px;
-      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-      cursor: default;
+      padding: 18px 16px;
+      transition: all 0.3s cubic-bezier(0.34, 1.2, 0.64, 1);
       position: relative;
       overflow: hidden;
     }
 
-    body.dark .card {
-      background: var(--glass-dark);
-      border-color: var(--glass-border-dark);
-    }
-
-    .card::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 100%);
-      opacity: 0;
-      transition: opacity 0.3s ease;
-    }
-
     .card:hover {
-      transform: translateY(-8px);
-      box-shadow: var(--shadow-xl);
-      border-color: var(--blue);
-    }
-
-    .card:hover::before {
-      opacity: 1;
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-lg);
     }
 
     .card-label {
       font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.8px;
-      text-transform: uppercase;
-      color: var(--sub-light);
-      margin-bottom: 10px;
+      font-weight: 600;
+      letter-spacing: 0.1px;
+      color: var(--sub);
+      margin-bottom: 8px;
       display: block;
     }
 
-    body.dark .card-label {
-      color: var(--sub-dark);
-    }
+    body.dark .card-label { color: var(--sub-dark); }
 
     .card-value {
-      font-size: 24px;
+      font-size: 21px;
       font-weight: 600;
-      letter-spacing: -0.5px;
+      letter-spacing: -0.4px;
       transition: all 0.3s ease;
-      position: relative;
-      z-index: 1;
     }
 
-    .card-value.positive {
-      color: var(--green);
-    }
+    .card-value.positive { color: var(--green); }
+    .card-value.negative { color: var(--red); }
+    .card-value.neutral { color: inherit; }
+    .card-value.loading { opacity: 0.4; filter: blur(3px); }
 
-    .card-value.negative {
-      color: var(--red);
-    }
-
-    .card-value.neutral {
-      color: inherit;
-    }
-
-    .card-value.loading {
-      opacity: 0.5;
-      filter: blur(2px);
-    }
-
-    /* Sections */
-    section {
-      margin-bottom: 32px;
-    }
+    /* ============ SECTIONS ============ */
+    section { margin-bottom: 30px; }
 
     section > h2 {
-      font-size: 14px;
-      font-weight: 700;
-      letter-spacing: 0.6px;
-      text-transform: uppercase;
-      color: var(--sub-light);
-      margin: 0 0 16px 4px;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.1px;
+      color: var(--sub);
+      margin: 0 0 14px 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
 
-    body.dark section > h2 {
-      color: var(--sub-dark);
-    }
+    body.dark section > h2 { color: var(--sub-dark); }
 
-    /* Time Machine */
+    /* ============ TIME CARDS ============ */
     .time-cards {
       display: flex;
-      gap: 14px;
+      gap: 10px;
       overflow-x: auto;
-      padding: 4px 0 12px 0;
+      padding: 4px 2px 10px;
       -webkit-overflow-scrolling: touch;
       scroll-behavior: smooth;
     }
 
     .time-card {
-      flex: 0 0 140px;
-      background: var(--glass-light);
-      backdrop-filter: blur(20px);
-      border: 2px solid var(--glass-border-light);
+      flex: 0 0 128px;
       border-radius: var(--radius-md);
-      padding: 16px;
-      box-shadow: var(--shadow);
-      transition: all 0.3s ease;
+      padding: 14px;
       text-align: center;
+      transition: all 0.3s ease;
     }
 
-    body.dark .time-card {
-      background: var(--glass-dark);
-      border-color: var(--glass-border-dark);
-    }
-
-    .time-card:hover {
-      transform: translateY(-4px);
-      box-shadow: var(--shadow-lg);
-    }
+    .time-card:hover { transform: translateY(-3px); box-shadow: var(--shadow); }
 
     .time-card-label {
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.7px;
-      color: var(--sub-light);
-      margin-bottom: 8px;
-    }
-
-    body.dark .time-card-label {
-      color: var(--sub-dark);
-    }
-
-    .time-card-value {
-      font-size: 18px;
+      font-size: 10.5px;
       font-weight: 600;
+      letter-spacing: 0.3px;
+      color: var(--sub);
+      margin-bottom: 6px;
     }
 
-    .time-card-value.positive {
-      color: var(--green);
-    }
+    body.dark .time-card-label { color: var(--sub-dark); }
 
-    .time-card-value.negative {
-      color: var(--red);
-    }
+    .time-card-value { font-size: 16px; font-weight: 600; }
+    .time-card-value.positive { color: var(--green); }
+    .time-card-value.negative { color: var(--red); }
+    .time-card-value.loading { opacity: 0.4; animation: pulse-loading 1.5s ease-in-out infinite; }
 
-    .time-card-value.loading {
-      opacity: 0.5;
-      animation: pulse-loading 1.5s ease-in-out infinite;
-    }
+    @keyframes pulse-loading { 0%, 100% { opacity: 0.35; } 50% { opacity: 0.7; } }
 
-    @keyframes pulse-loading {
-      0%, 100% { opacity: 0.5; }
-      50% { opacity: 0.8; }
-    }
-
-    /* Charts & Tables */
+    /* ============ CHART ============ */
     .chart-container {
-      background: var(--glass-light);
-      backdrop-filter: blur(20px);
-      border: 2px solid var(--glass-border-light);
       border-radius: var(--radius-lg);
-      padding: 20px;
-      box-shadow: var(--shadow);
-      margin-bottom: 16px;
+      padding: 18px;
     }
 
-    body.dark .chart-container {
-      background: var(--glass-dark);
-      border-color: var(--glass-border-dark);
-    }
-
-    .sparkline-wrapper {
-      width: 100%;
-      height: 140px;
-      position: relative;
-    }
-
-    #sparkline {
-      width: 100%;
-      height: 100%;
-      display: block;
-    }
+    .sparkline-wrapper { width: 100%; height: 130px; position: relative; }
+    #sparkline { width: 100%; height: 100%; display: block; }
 
     .chart-empty {
       position: absolute;
@@ -564,138 +476,129 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 13px;
-      color: var(--sub-light);
+      font-size: 12.5px;
+      color: var(--tertiary);
       text-align: center;
     }
 
-    body.dark .chart-empty {
-      color: var(--sub-dark);
-    }
+    body.dark .chart-empty { color: var(--tertiary-dark); }
 
-    /* Data Table */
-    .data-table {
-      width: 100%;
-      border-collapse: collapse;
-      overflow: hidden;
-    }
-
+    /* ============ DATA TABLE ============ */
     .data-table-wrapper {
-      background: var(--glass-light);
-      backdrop-filter: blur(20px);
-      border: 2px solid var(--glass-border-light);
       border-radius: var(--radius-lg);
       overflow: hidden;
-      box-shadow: var(--shadow);
     }
 
-    body.dark .data-table-wrapper {
-      background: var(--glass-dark);
-      border-color: var(--glass-border-dark);
-    }
+    .data-table { width: 100%; border-collapse: collapse; }
 
     .data-table thead tr {
-      background: linear-gradient(90deg, rgba(0,0,0,0.02) 0%, rgba(0,0,0,0.01) 100%);
-      border-bottom: 2px solid var(--glass-border-light);
+      border-bottom: 1px solid var(--glass-border);
     }
 
-    body.dark .data-table thead tr {
-      background: linear-gradient(90deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%);
-      border-color: var(--glass-border-dark);
-    }
+    body.dark .data-table thead tr { border-color: var(--glass-border-dark); }
 
     .data-table th {
-      padding: 16px;
+      padding: 14px 14px;
       text-align: left;
-      font-weight: 700;
-      font-size: 11px;
-      letter-spacing: 0.8px;
-      text-transform: uppercase;
-      color: var(--sub-light);
+      font-weight: 600;
+      font-size: 10.5px;
+      letter-spacing: 0.3px;
+      color: var(--sub);
     }
 
-    body.dark .data-table th {
-      color: var(--sub-dark);
-    }
+    body.dark .data-table th { color: var(--sub-dark); }
 
     .data-table td {
-      padding: 14px 16px;
-      font-size: 13px;
-      border-bottom: 1px solid var(--glass-border-light);
+      padding: 12px 14px;
+      font-size: 12.5px;
+      border-bottom: 1px solid var(--glass-border);
     }
 
-    body.dark .data-table td {
-      border-color: var(--glass-border-dark);
+    body.dark .data-table td { border-color: var(--glass-border-dark); }
+
+    .data-table tbody tr { transition: background 0.2s ease; }
+    .data-table tbody tr:last-child td { border-bottom: none; }
+    .data-table tbody tr:hover { background: rgba(10,132,255,0.05); }
+    body.dark .data-table tbody tr:hover { background: rgba(10,132,255,0.08); }
+
+    .data-table .positive { color: var(--green); font-weight: 600; }
+    .data-table .negative { color: var(--red); font-weight: 600; }
+
+    .table-empty {
+      padding: 28px 16px;
+      text-align: center;
+      font-size: 12.5px;
+      color: var(--tertiary);
     }
 
-    .data-table tbody tr {
-      transition: background 0.2s ease;
-    }
+    body.dark .table-empty { color: var(--tertiary-dark); }
 
-    .data-table tbody tr:hover {
-      background: rgba(0, 122, 255, 0.05);
-    }
-
-    body.dark .data-table tbody tr:hover {
-      background: rgba(0, 122, 255, 0.08);
-    }
-
-    .data-table .positive {
-      color: var(--green);
-      font-weight: 600;
-    }
-
-    .data-table .negative {
-      color: var(--red);
-      font-weight: 600;
-    }
-
-    /* AI Panel */
+    /* ============ AI PANEL ============ */
     .ai-panel {
-      background: var(--glass-light);
-      backdrop-filter: blur(20px);
-      border: 2px solid var(--glass-border-light);
       border-radius: var(--radius-lg);
-      padding: 24px;
-      box-shadow: var(--shadow);
+      padding: 20px;
     }
 
-    body.dark .ai-panel {
-      background: var(--glass-dark);
-      border-color: var(--glass-border-dark);
+    .ai-key-notice {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 14px;
+      border-radius: var(--radius-sm);
+      background: rgba(255,159,10,0.08);
+      border: 1px solid rgba(255,159,10,0.18);
+      font-size: 12.5px;
+      color: var(--orange);
+      margin-bottom: 16px;
+      font-weight: 500;
+    }
+
+    .ai-key-notice button {
+      margin-left: auto;
+      flex-shrink: 0;
+      background: var(--orange);
+      color: white;
+      border: none;
+      padding: 7px 12px;
+      border-radius: var(--radius-xs);
+      font-size: 11.5px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
     }
 
     .ai-controls {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap: 12px;
-      margin-bottom: 16px;
+      gap: 10px;
+      margin-bottom: 14px;
     }
 
     .ai-select {
-      padding: 10px 14px;
-      border: 2px solid var(--glass-border-light);
+      padding: 11px 14px;
+      border: 1px solid var(--glass-border);
       background: rgba(255,255,255,0.5);
-      color: var(--text-light);
+      color: var(--text);
       border-radius: var(--radius-sm);
       font-family: inherit;
-      font-size: 12px;
-      font-weight: 600;
+      font-size: 12.5px;
+      font-weight: 500;
       cursor: pointer;
-      transition: all 0.3s ease;
+      transition: all 0.25s ease;
       outline: none;
+      -webkit-appearance: none;
+      appearance: none;
     }
 
     body.dark .ai-select {
-      background: rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.06);
       border-color: var(--glass-border-dark);
       color: var(--text-dark);
     }
 
-    .ai-select:hover,
-    .ai-select:focus {
+    .ai-select:hover, .ai-select:focus {
       border-color: var(--blue);
-      box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+      box-shadow: 0 0 0 3px rgba(10,132,255,0.12);
     }
 
     .ai-button {
@@ -707,236 +610,222 @@
       color: white;
       font-family: inherit;
       font-size: 14px;
-      font-weight: 700;
-      letter-spacing: 0.3px;
+      font-weight: 600;
+      letter-spacing: 0.1px;
       cursor: pointer;
-      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      transition: all 0.3s cubic-bezier(0.34, 1.2, 0.64, 1);
       position: relative;
       overflow: hidden;
-      box-shadow: 0 4px 15px rgba(0, 122, 255, 0.3);
+      box-shadow: 0 6px 20px rgba(10,132,255,0.28);
     }
 
-    .ai-button:hover:not(:disabled) {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 25px rgba(0, 122, 255, 0.4);
-    }
-
-    .ai-button:active:not(:disabled) {
-      transform: translateY(0);
-    }
-
-    .ai-button:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-
-    .ai-button::before {
-      content: "";
-      position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-      transition: left 0.6s ease;
-    }
-
-    .ai-button:active::before {
-      left: 100%;
-    }
+    .ai-button:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(10,132,255,0.35); }
+    .ai-button:active:not(:disabled) { transform: translateY(0); }
+    .ai-button:disabled { opacity: 0.55; cursor: not-allowed; }
 
     .spinner {
-      width: 32px;
-      height: 32px;
-      margin: 20px auto;
+      width: 30px;
+      height: 30px;
+      margin: 18px auto;
       border-radius: 50%;
-      border: 3px solid rgba(0, 122, 255, 0.2);
+      border: 3px solid rgba(10,132,255,0.15);
       border-top-color: var(--blue);
       animation: spin 0.8s linear infinite;
     }
 
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
-    .ai-response {
-      margin-top: 20px;
-      display: grid;
-      gap: 12px;
-    }
+    .ai-response { margin-top: 18px; display: grid; gap: 10px; }
 
     .ai-response-item {
-      padding: 14px;
-      background: rgba(0, 122, 255, 0.05);
-      border-left: 4px solid var(--blue);
-      border-radius: var(--radius-sm);
+      padding: 13px 14px;
+      background: rgba(10,132,255,0.05);
+      border-left: 3px solid var(--blue);
+      border-radius: var(--radius-xs);
     }
 
-    body.dark .ai-response-item {
-      background: rgba(0, 122, 255, 0.08);
-    }
+    body.dark .ai-response-item { background: rgba(10,132,255,0.08); }
 
     .ai-response-label {
-      font-size: 11px;
+      font-size: 10.5px;
       font-weight: 700;
-      letter-spacing: 0.6px;
+      letter-spacing: 0.3px;
       text-transform: uppercase;
       color: var(--blue);
       margin-bottom: 4px;
       display: block;
     }
 
-    .ai-response-text {
-      font-size: 13px;
-      line-height: 1.6;
-      color: var(--text-light);
-    }
-
-    body.dark .ai-response-text {
-      color: var(--text-dark);
-    }
+    .ai-response-text { font-size: 13px; line-height: 1.55; color: var(--text); }
+    body.dark .ai-response-text { color: var(--text-dark); }
 
     .ai-error {
-      padding: 14px;
-      background: rgba(255, 59, 48, 0.1);
-      border-left: 4px solid var(--red);
-      border-radius: var(--radius-sm);
-      font-size: 13px;
+      padding: 13px 14px;
+      background: rgba(255,69,58,0.08);
+      border-left: 3px solid var(--red);
+      border-radius: var(--radius-xs);
+      font-size: 12.5px;
       color: var(--red);
     }
 
-    /* Modal */
+    /* ============ MODAL ============ */
     .modal-overlay {
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.5);
-      backdrop-filter: blur(4px);
+      background: rgba(20,20,30,0.35);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
       z-index: 1000;
-      align-items: center;
+      align-items: flex-end;
       justify-content: center;
       animation: fadeIn 0.3s ease;
     }
 
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
+    @media (min-width: 640px) {
+      .modal-overlay { align-items: center; }
     }
 
-    .modal-overlay.visible {
-      display: flex;
-    }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .modal-overlay.visible { display: flex; }
 
     .modal-content {
-      background: var(--glass-light);
-      backdrop-filter: blur(20px);
-      border: 2px solid var(--glass-border-light);
-      border-radius: var(--radius-lg);
+      background: var(--glass-strong);
+      backdrop-filter: blur(30px) saturate(180%);
+      -webkit-backdrop-filter: blur(30px) saturate(180%);
+      border: 1px solid var(--glass-border);
+      border-radius: 26px 26px 0 0;
       box-shadow: var(--shadow-xl);
-      width: 90%;
-      max-width: 500px;
-      max-height: 85vh;
+      width: 100%;
+      max-width: 520px;
+      max-height: 88vh;
       overflow-y: auto;
-      padding: 28px;
-      animation: slideInUp 0.3s ease;
+      padding: 24px 22px calc(24px + env(safe-area-inset-bottom));
+      animation: slideInUp 0.35s cubic-bezier(0.34, 1.1, 0.4, 1);
+    }
+
+    @media (min-width: 640px) {
+      .modal-content { border-radius: var(--radius-xl); }
     }
 
     @keyframes slideInUp {
-      from {
-        opacity: 0;
-        transform: translateY(40px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+      from { opacity: 0; transform: translateY(40px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
-    body.dark .modal-content {
-      background: var(--glass-dark);
-      border-color: var(--glass-border-dark);
+    body.dark .modal-content { background: var(--glass-dark-strong); border-color: var(--glass-border-dark); }
+
+    .modal-drag-handle {
+      width: 36px;
+      height: 4px;
+      border-radius: 2px;
+      background: var(--glass-border);
+      margin: 0 auto 16px;
     }
+
+    body.dark .modal-drag-handle { background: rgba(255,255,255,0.15); }
+
+    @media (min-width: 640px) { .modal-drag-handle { display: none; } }
 
     .modal-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 24px;
-      padding-bottom: 16px;
-      border-bottom: 2px solid var(--glass-border-light);
+      margin-bottom: 18px;
     }
 
-    body.dark .modal-header {
-      border-color: var(--glass-border-dark);
-    }
-
-    .modal-header h2 {
-      margin: 0;
-      font-size: 18px;
-      font-weight: 700;
-    }
+    .modal-header h2 { margin: 0; font-size: 17px; font-weight: 700; letter-spacing: -0.2px; }
 
     .modal-close {
-      background: none;
+      background: rgba(120,120,128,0.12);
       border: none;
-      font-size: 24px;
+      font-size: 15px;
       cursor: pointer;
-      color: var(--sub-light);
+      color: var(--sub);
       transition: all 0.2s ease;
       padding: 0;
-      width: 40px;
-      height: 40px;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
+      flex-shrink: 0;
     }
 
-    body.dark .modal-close {
-      color: var(--sub-dark);
-    }
+    body.dark .modal-close { color: var(--sub-dark); background: rgba(255,255,255,0.08); }
+    .modal-close:hover { color: var(--red); transform: scale(1.08); }
 
-    .modal-close:hover {
-      color: var(--red);
-      transform: scale(1.1);
-    }
-
-    .form-group {
+    .modal-tabs {
+      display: flex;
+      gap: 4px;
+      padding: 4px;
+      border-radius: var(--radius-md);
+      background: rgba(120,120,128,0.08);
       margin-bottom: 20px;
     }
 
-    .form-group label {
-      display: block;
+    body.dark .modal-tabs { background: rgba(255,255,255,0.05); }
+
+    .modal-tab {
+      flex: 1;
+      padding: 9px 8px;
+      border: none;
+      background: transparent;
+      border-radius: var(--radius-sm);
+      font-family: inherit;
       font-size: 12px;
-      font-weight: 700;
-      letter-spacing: 0.6px;
-      text-transform: uppercase;
-      color: var(--sub-light);
-      margin-bottom: 8px;
+      font-weight: 600;
+      color: var(--sub);
+      cursor: pointer;
+      transition: all 0.25s ease;
     }
 
-    body.dark .form-group label {
-      color: var(--sub-dark);
+    body.dark .modal-tab { color: var(--sub-dark); }
+
+    .modal-tab.active {
+      background: var(--glass-strong);
+      color: var(--text);
+      box-shadow: var(--shadow-sm);
     }
+
+    body.dark .modal-tab.active { background: rgba(255,255,255,0.1); color: var(--text-dark); }
+
+    .modal-panel { display: none; }
+    .modal-panel.active { display: block; animation: fadeIn 0.25s ease; }
+
+    .form-group { margin-bottom: 16px; }
+
+    .form-group label {
+      display: block;
+      font-size: 11.5px;
+      font-weight: 600;
+      letter-spacing: 0.1px;
+      color: var(--sub);
+      margin-bottom: 7px;
+    }
+
+    body.dark .form-group label { color: var(--sub-dark); }
 
     .form-group input,
     .form-group select,
     .form-group textarea {
       width: 100%;
       padding: 12px 14px;
-      border: 2px solid var(--glass-border-light);
+      border: 1px solid var(--glass-border);
       background: rgba(255,255,255,0.5);
-      color: var(--text-light);
+      color: var(--text);
       border-radius: var(--radius-sm);
       font-family: inherit;
-      font-size: 13px;
-      transition: all 0.3s ease;
+      font-size: 13.5px;
+      transition: all 0.25s ease;
       outline: none;
     }
 
     body.dark .form-group input,
     body.dark .form-group select,
     body.dark .form-group textarea {
-      background: rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.06);
       border-color: var(--glass-border-dark);
       color: var(--text-dark);
     }
@@ -945,230 +834,252 @@
     .form-group select:focus,
     .form-group textarea:focus {
       border-color: var(--blue);
-      box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+      box-shadow: 0 0 0 3px rgba(10,132,255,0.12);
     }
 
-    .form-group small {
-      display: block;
-      margin-top: 6px;
-      font-size: 11px;
-      color: var(--sub-light);
+    .form-group input[readonly] { opacity: 0.65; cursor: default; }
+
+    .form-group small { display: block; margin-top: 6px; font-size: 11px; color: var(--tertiary); }
+    body.dark .form-group small { color: var(--tertiary-dark); }
+
+    .input-with-action { display: flex; gap: 8px; }
+    .input-with-action input { flex: 1; }
+
+    .icon-action-btn {
+      flex-shrink: 0;
+      width: 44px;
+      border: 1px solid var(--glass-border);
+      background: rgba(255,255,255,0.5);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-size: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      color: var(--text);
     }
 
-    body.dark .form-group small {
-      color: var(--sub-dark);
+    body.dark .icon-action-btn {
+      background: rgba(255,255,255,0.06);
+      border-color: var(--glass-border-dark);
+      color: var(--text-dark);
     }
+
+    .icon-action-btn:hover { border-color: var(--blue); }
+
+    .info-box {
+      border-radius: var(--radius-sm);
+      padding: 13px 14px;
+      margin-bottom: 18px;
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .info-box.green { background: rgba(48,209,88,0.08); border: 1px solid rgba(48,209,88,0.18); }
+    .info-box.blue { background: rgba(10,132,255,0.08); border: 1px solid rgba(10,132,255,0.18); }
+
+    .info-box-title {
+      font-size: 10.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      margin-bottom: 6px;
+    }
+
+    .info-box.green .info-box-title { color: var(--green); }
+    .info-box.blue .info-box-title { color: var(--blue); }
+    .info-box-body { color: var(--sub); }
+    body.dark .info-box-body { color: var(--sub-dark); }
+
+    .subsection-title {
+      font-size: 11.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      color: var(--sub);
+      margin-bottom: 12px;
+    }
+
+    body.dark .subsection-title { color: var(--sub-dark); }
 
     .alarm-item {
-      background: rgba(255, 184, 0, 0.08);
-      border: 2px solid rgba(255, 184, 0, 0.15);
+      background: rgba(255,159,10,0.06);
+      border: 1px solid rgba(255,159,10,0.15);
       border-radius: var(--radius-sm);
       padding: 12px 14px;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 10px;
     }
 
-    .alarm-item-text {
-      font-size: 13px;
-      color: var(--text-light);
-      font-weight: 500;
-    }
-
-    body.dark .alarm-item-text {
-      color: var(--text-dark);
-    }
+    .alarm-item-text { font-size: 12.5px; color: var(--text); font-weight: 500; }
+    body.dark .alarm-item-text { color: var(--text-dark); }
 
     .btn-small {
-      padding: 8px 12px;
-      background: var(--red);
-      color: white;
+      padding: 7px 12px;
+      background: rgba(255,69,58,0.12);
+      color: var(--red);
       border: none;
-      border-radius: var(--radius-sm);
+      border-radius: var(--radius-xs);
       cursor: pointer;
-      font-size: 12px;
+      font-size: 11.5px;
       font-weight: 600;
       transition: all 0.2s ease;
+      flex-shrink: 0;
     }
 
-    .btn-small:hover {
-      background: #ff2a20;
-      transform: scale(1.05);
-    }
+    .btn-small:hover { background: var(--red); color: white; }
 
     .modal-buttons {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-top: 28px;
-      padding-top: 20px;
-      border-top: 2px solid var(--glass-border-light);
+      gap: 10px;
+      margin-top: 22px;
+      padding-top: 18px;
+      border-top: 1px solid var(--glass-border);
     }
 
-    body.dark .modal-buttons {
-      border-color: var(--glass-border-dark);
-    }
+    body.dark .modal-buttons { border-color: var(--glass-border-dark); }
 
     .btn {
-      padding: 12px 16px;
+      padding: 13px 16px;
       border: none;
       border-radius: var(--radius-md);
       font-family: inherit;
-      font-weight: 700;
-      font-size: 13px;
+      font-weight: 600;
+      font-size: 13.5px;
       cursor: pointer;
-      transition: all 0.3s ease;
+      transition: all 0.25s ease;
       outline: none;
     }
 
     .btn-primary {
       background: linear-gradient(135deg, var(--blue) 0%, var(--purple) 100%);
       color: white;
-      box-shadow: 0 4px 15px rgba(0, 122, 255, 0.3);
+      box-shadow: 0 6px 18px rgba(10,132,255,0.28);
     }
 
-    .btn-primary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 25px rgba(0, 122, 255, 0.4);
-    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(10,132,255,0.35); }
 
     .btn-secondary {
-      border: 2px solid var(--glass-border-light);
-      background: transparent;
-      color: var(--text-light);
+      border: 1px solid var(--glass-border);
+      background: rgba(120,120,128,0.08);
+      color: var(--text);
     }
 
-    body.dark .btn-secondary {
-      border-color: var(--glass-border-dark);
-      color: var(--text-dark);
+    body.dark .btn-secondary { border-color: var(--glass-border-dark); color: var(--text-dark); background: rgba(255,255,255,0.05); }
+    .btn-secondary:hover { background: rgba(120,120,128,0.14); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* ============ TOGGLE SWITCH ============ */
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 4px 0;
+      margin-bottom: 16px;
     }
 
-    .btn-secondary:hover {
-      background: rgba(0, 122, 255, 0.1);
-      border-color: var(--blue);
+    .toggle-row-label { font-size: 13px; font-weight: 500; }
+    .toggle-row-sub { font-size: 11px; color: var(--tertiary); margin-top: 2px; }
+    body.dark .toggle-row-sub { color: var(--tertiary-dark); }
+
+    .switch { position: relative; width: 48px; height: 28px; flex-shrink: 0; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+
+    .switch-slider {
+      position: absolute;
+      cursor: pointer;
+      inset: 0;
+      background: rgba(120,120,128,0.24);
+      border-radius: 28px;
+      transition: 0.3s;
     }
 
-    .btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
+    .switch-slider::before {
+      content: "";
+      position: absolute;
+      height: 24px;
+      width: 24px;
+      left: 2px;
+      bottom: 2px;
+      background: white;
+      border-radius: 50%;
+      transition: 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
     }
 
-    /* Footer */
+    .switch input:checked + .switch-slider { background: var(--green); }
+    .switch input:checked + .switch-slider::before { transform: translateX(20px); }
+
+    /* ============ FOOTER ============ */
     footer {
       position: fixed;
       bottom: 0;
       left: 0;
       right: 0;
-      background: var(--glass-light);
-      backdrop-filter: blur(20px);
-      border-top: 2px solid var(--glass-border-light);
-      padding: 14px 16px;
+      background: var(--glass);
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      border-top: 1px solid var(--glass-border);
+      padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
       text-align: center;
-      font-size: 11px;
+      font-size: 10.5px;
       font-weight: 500;
-      color: var(--sub-light);
+      color: var(--tertiary);
       z-index: 100;
-      height: 60px;
       display: flex;
       align-items: center;
       justify-content: center;
+      gap: 6px;
     }
 
-    body.dark footer {
-      background: var(--glass-dark);
-      border-color: var(--glass-border-dark);
-      color: var(--sub-dark);
-    }
+    body.dark footer { background: var(--glass-dark); border-color: var(--glass-border-dark); color: var(--tertiary-dark); }
 
-    /* Loading skeleton */
-    .skeleton {
-      background: linear-gradient(90deg, rgba(0,0,0,0.05) 25%, rgba(0,0,0,0.08) 50%, rgba(0,0,0,0.05) 75%);
-      background-size: 200% 100%;
-      animation: loading 1.5s infinite;
-    }
-
-    body.dark .skeleton {
-      background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.05) 75%);
-    }
-
-    @keyframes loading {
-      0% { background-position: 200% 0; }
-      100% { background-position: -200% 0; }
-    }
-
-    /* Responsive */
+    /* ============ RESPONSIVE ============ */
     @media (max-width: 640px) {
-      .container {
-        padding: 20px 12px 100px;
-      }
-
-      .hero-amount {
-        font-size: 44px;
-      }
-
-      header {
-        flex-wrap: wrap;
-        gap: 8px;
-      }
-
-      .cards-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .modal-content {
-        width: 95%;
-        max-height: 90vh;
-        padding: 20px;
-      }
-
-      .ai-controls {
-        grid-template-columns: 1fr;
-      }
+      .container { padding: 18px 12px 110px; }
+      .hero-amount { font-size: 40px; }
+      .cards-grid { grid-template-columns: repeat(2, 1fr); }
+      .ai-controls { grid-template-columns: 1fr; }
+      .brand-text h1 { font-size: 17px; }
     }
 
-    /* Scrollbar styling */
-    ::-webkit-scrollbar {
-      width: 8px;
-      height: 8px;
-    }
+    /* ============ SCROLLBAR ============ */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(10,132,255,0.25); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(10,132,255,0.45); }
+    body.dark ::-webkit-scrollbar-thumb { background: rgba(10,132,255,0.2); }
 
-    ::-webkit-scrollbar-track {
-      background: transparent;
-    }
-
-    ::-webkit-scrollbar-thumb {
-      background: rgba(0, 122, 255, 0.3);
-      border-radius: 4px;
-    }
-
-    ::-webkit-scrollbar-thumb:hover {
-      background: rgba(0, 122, 255, 0.5);
-    }
-
-    body.dark ::-webkit-scrollbar-thumb {
-      background: rgba(0, 122, 255, 0.2);
-    }
-
-    body.dark ::-webkit-scrollbar-thumb:hover {
-      background: rgba(0, 122, 255, 0.4);
+    /* Focus visibility for accessibility */
+    button:focus-visible, input:focus-visible, select:focus-visible {
+      outline: 2px solid var(--blue);
+      outline-offset: 2px;
     }
   </style>
 </head>
 <body>
 
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+<div class="orb orb-3"></div>
+
 <div class="page-wrapper">
   <div class="container">
     <header>
       <div class="brand">
-        <h1>🚀 Higercoin Terminal</h1>
-        <p>Professional Bitcoin Portfolio Manager</p>
+        <div class="brand-mark">₿</div>
+        <div class="brand-text">
+          <h1>Higercoin Terminal</h1>
+          <p>Bitcoin Portfolio &amp; AI Analysis</p>
+        </div>
       </div>
       <div class="header-actions">
-        <div id="statusIndicator" class="status-indicator offline" title="Firebase Connection Status">
-          ☁️
-        </div>
+        <div id="statusIndicator" class="status-indicator offline" title="Firebase Connection Status">☁️</div>
         <button id="settingsBtn" class="icon-btn" title="Settings" aria-label="Open settings">⚙️</button>
         <button id="themeBtn" class="icon-btn" title="Toggle theme" aria-label="Toggle dark mode">🌙</button>
       </div>
@@ -1183,127 +1094,184 @@
     </div>
 
     <div class="cards-grid">
-      <div class="card">
+      <div class="card glass">
         <div class="card-label">BTC Price</div>
         <div id="priceCard" class="card-value neutral loading">—</div>
       </div>
-      <div class="card">
-        <div class="card-label">Total P&L</div>
+      <div class="card glass">
+        <div class="card-label">Total P&amp;L</div>
         <div id="plCard" class="card-value neutral loading">—</div>
       </div>
-      <div class="card">
+      <div class="card glass">
         <div class="card-label">2H Change</div>
         <div id="change2hCard" class="card-value neutral loading">—</div>
       </div>
-      <div class="card">
+      <div class="card glass">
         <div class="card-label">BTC Amount</div>
         <div id="amountCard" class="card-value neutral">0</div>
       </div>
     </div>
 
     <section>
-      <h2>📊 Time Horizons</h2>
+      <h2>Time Horizons</h2>
       <div class="time-cards" id="timeCards"></div>
     </section>
 
     <section>
-      <h2>📈 Price Trend (24H)</h2>
-      <div class="chart-container">
+      <h2>Price Trend · 24H</h2>
+      <div class="chart-container glass">
         <div class="sparkline-wrapper">
-          <svg id="sparkline"></svg>
-          <div id="sparklineEmpty" class="chart-empty">Loading price data...</div>
+          <svg id="sparkline" viewBox="0 0 300 140" preserveAspectRatio="none"></svg>
+          <div id="sparklineEmpty" class="chart-empty">Loading price data…</div>
         </div>
       </div>
     </section>
 
     <section>
-      <h2>📋 Snapshots</h2>
-      <div class="data-table-wrapper">
+      <h2>Snapshots</h2>
+      <div class="data-table-wrapper glass">
         <table class="data-table">
           <thead>
             <tr>
               <th>Time</th>
-              <th>Price (€)</th>
-              <th>Portfolio (€)</th>
+              <th>Price</th>
+              <th>Portfolio</th>
               <th>Change</th>
             </tr>
           </thead>
           <tbody id="historyTable"></tbody>
         </table>
+        <div id="historyEmpty" class="table-empty" style="display:none;">No snapshots yet — check back shortly</div>
       </div>
     </section>
 
     <section>
-      <h2>🤖 AI Analysis</h2>
-      <div class="ai-panel">
+      <h2>AI Analysis</h2>
+      <div class="ai-panel glass">
+        <div id="aiKeyNotice" class="ai-key-notice" style="display:none;">
+          <span>⚠️</span>
+          <span>Add a Gemini API key in Settings to enable AI analysis</span>
+          <button id="aiKeyNoticeBtn">Add key</button>
+        </div>
         <div class="ai-controls">
           <select id="modelSelect" class="ai-select">
-            <option value="gemini-1.5-flash">Flash (Fast)</option>
-            <option value="gemini-1.5-pro">Pro (Advanced)</option>
+            <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+            <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
+            <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
           </select>
           <select id="personaSelect" class="ai-select">
-            <option value="neutral">Neutral</option>
-            <option value="aggressive">Aggressive Trader 🔥</option>
-            <option value="conservative">Conservative (LT) 🛡️</option>
-            <option value="technical">Technical Analyst 📊</option>
+            <option value="neutral">Neutral Analyst</option>
+            <option value="aggressive">Aggressive Trader</option>
+            <option value="conservative">Conservative (LT)</option>
+            <option value="technical">Technical Analyst</option>
           </select>
         </div>
-        <button id="aiBtn" class="ai-button">🔬 Analyze Now</button>
+        <button id="aiBtn" class="ai-button">Analyze Now</button>
         <div id="aiResult"></div>
       </div>
     </section>
   </div>
 
   <footer>
-    <div>✨ Higercoin Terminal Pro • Secure Cloud Sync • Device-First Privacy</div>
+    <span>✨ Higercoin Terminal Pro</span>
+    <span>·</span>
+    <span>Secure Cloud Sync</span>
   </footer>
 </div>
 
 <!-- Settings Modal -->
 <div id="settingsModal" class="modal-overlay">
   <div class="modal-content">
+    <div class="modal-drag-handle"></div>
     <div class="modal-header">
-      <h2>⚙️ Settings & Configuration</h2>
+      <h2>Settings</h2>
       <button id="closeModal" class="modal-close" aria-label="Close settings">✕</button>
     </div>
 
-    <div class="form-group">
-      <label>Device ID</label>
-      <input type="text" id="deviceIdInput" readonly placeholder="Connecting to Firebase...">
-      <small>Unique identifier for cloud synchronization</small>
+    <div class="modal-tabs">
+      <button class="modal-tab active" data-tab="portfolio">Portfolio</button>
+      <button class="modal-tab" data-tab="ai">AI</button>
+      <button class="modal-tab" data-tab="alarms">Alarms</button>
     </div>
 
-    <div class="form-group">
-      <label>BTC Amount</label>
-      <input type="number" id="btcAmountInput" placeholder="0.00000" step="0.00001" min="0">
-      <small>Amount of Bitcoin in your portfolio</small>
-    </div>
+    <!-- Portfolio Tab -->
+    <div class="modal-panel active" data-panel="portfolio">
+      <div class="form-group">
+        <label>Device ID</label>
+        <input type="text" id="deviceIdInput" readonly placeholder="Connecting to Firebase…">
+        <small>Unique identifier used for cloud synchronization</small>
+      </div>
 
-    <div class="form-group">
-      <label>Initial EUR Value</label>
-      <input type="number" id="baseEurInput" placeholder="0.00" step="0.01" min="0">
-      <small>Total amount spent at purchase time</small>
-    </div>
+      <div class="form-group">
+        <label>BTC Amount</label>
+        <input type="number" id="btcAmountInput" placeholder="0.00000" step="0.00001" min="0" inputmode="decimal">
+        <small>Amount of Bitcoin in your portfolio</small>
+      </div>
 
-    <div class="form-group">
-      <label>Gemini API Key</label>
-      <input type="password" id="geminiKeyInput" placeholder="AIza... (starts with AIza)">
-      <small>🔒 Stored ONLY locally in browser, NEVER uploaded to Firebase</small>
-    </div>
+      <div class="form-group">
+        <label>Initial EUR Value</label>
+        <input type="number" id="baseEurInput" placeholder="0.00" step="0.01" min="0" inputmode="decimal">
+        <small>Total amount spent at purchase time</small>
+      </div>
 
-    <div style="background: rgba(52,199,89,0.1); border: 2px solid rgba(52,199,89,0.2); border-radius: 12px; padding: 14px; margin-bottom: 20px;">
-      <div style="font-size: 11px; font-weight: 700; color: var(--green); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 6px;">🛡️ Privacy & Security</div>
-      <div style="font-size: 12px; line-height: 1.5; color: var(--text-light);">
-        <strong>API Key:</strong> Stored in browser localStorage only. Never sent to Firebase.<br>
-        <strong>Portfolio Data:</strong> Encrypted and synced to Firebase with user-level security rules.<br>
-        <strong>Your Data:</strong> Only accessible with your unique Device ID.
+      <div class="info-box blue">
+        <div class="info-box-title">Cloud Sync</div>
+        <div class="info-box-body">Your portfolio amount and history sync automatically to Firebase under your device's secure, isolated record.</div>
       </div>
     </div>
 
-    <div style="margin-bottom: 24px;">
-      <div style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--sub-light); margin-bottom: 12px;">🔔 Alarm Rules</div>
+    <!-- AI Tab -->
+    <div class="modal-panel" data-panel="ai">
+      <div class="form-group">
+        <label>Gemini API Key</label>
+        <div class="input-with-action">
+          <input type="password" id="geminiKeyInput" placeholder="AIza…" autocomplete="off" spellcheck="false">
+          <button type="button" id="toggleKeyVisibility" class="icon-action-btn" title="Show/hide key" aria-label="Toggle key visibility">👁️</button>
+        </div>
+        <small>Saved securely to your Firebase account and used automatically — no need to re-enter it or edit any code</small>
+      </div>
+
+      <div class="form-group">
+        <label>Default Model</label>
+        <select id="modelSelectSettings" class="ai-select" style="width:100%;">
+          <option value="gemini-2.5-flash">Gemini 2.5 Flash — fast</option>
+          <option value="gemini-2.5-pro">Gemini 2.5 Pro — advanced</option>
+          <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Analysis Persona</label>
+        <select id="personaSelectSettings" class="ai-select" style="width:100%;">
+          <option value="neutral">Neutral Analyst</option>
+          <option value="aggressive">Aggressive Trader</option>
+          <option value="conservative">Conservative (Long-Term)</option>
+          <option value="technical">Technical Analyst</option>
+        </select>
+      </div>
+
+      <div class="info-box green">
+        <div class="info-box-title">How this works</div>
+        <div class="info-box-body">Enter your Gemini key once, tap Save. It's written to your private Firebase record and read back automatically every time AI Analysis runs — on this device or any other you sign into.</div>
+      </div>
+    </div>
+
+    <!-- Alarms Tab -->
+    <div class="modal-panel" data-panel="alarms">
+      <div class="toggle-row">
+        <div>
+          <div class="toggle-row-label">Sound alerts</div>
+          <div class="toggle-row-sub">Play a chime when an alarm triggers</div>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="soundToggle" checked>
+          <span class="switch-slider"></span>
+        </label>
+      </div>
+
+      <div class="subsection-title">Alarm Rules</div>
       <div id="alarmsList"></div>
-      <button id="addAlarmBtn" class="ai-button" style="background: linear-gradient(135deg, #FF9500 0%, #FFB800 100%); margin-top: 12px; font-size: 13px; min-height: 44px;">+ Add New Alarm</button>
+      <button id="addAlarmBtn" class="ai-button" style="background: linear-gradient(135deg, var(--orange) 0%, #FFB800 100%); margin-top: 10px; font-size: 13px; min-height: 44px; box-shadow: 0 6px 18px rgba(255,159,10,0.28);">+ Add New Alarm</button>
     </div>
 
     <div class="modal-buttons">
@@ -1313,21 +1281,48 @@
   </div>
 </div>
 
+<!-- Alarm Modal -->
+<div id="alarmModal" class="modal-overlay">
+  <div class="modal-content" style="max-width: 400px;">
+    <div class="modal-drag-handle"></div>
+    <div class="modal-header">
+      <h2>New Alarm</h2>
+      <button id="closeAlarmModal" class="modal-close" aria-label="Close">✕</button>
+    </div>
+
+    <div class="form-group">
+      <label>Minimum EUR Value</label>
+      <input type="number" id="alarmMinInput" placeholder="50.00" step="0.01" min="0" inputmode="decimal">
+      <small>Trigger when portfolio drops to or below this value</small>
+    </div>
+
+    <div class="form-group">
+      <label>Maximum EUR Value</label>
+      <input type="number" id="alarmMaxInput" placeholder="200.00" step="0.01" min="0" inputmode="decimal">
+      <small>Trigger when portfolio rises to or above this value</small>
+    </div>
+
+    <div class="modal-buttons">
+      <button id="cancelAlarmBtn" class="btn btn-secondary">Cancel</button>
+      <button id="confirmAlarmBtn" class="btn btn-primary">Add Alarm</button>
+    </div>
+  </div>
+</div>
+
 <script>
   /**
    * ============================================================
-   * HIGERCOIN TERMINAL PRO v3.0
-   * Advanced Bitcoin Portfolio Manager with AI Analysis
+   * HIGERCOIN TERMINAL PRO v4.0
+   * Advanced Bitcoin Portfolio Manager with Cloud-Synced AI
    * ============================================================
-   * 
+   *
    * Key Features:
-   * - Firebase cloud synchronization with strict security rules
-   * - Local API key storage (never uploaded to cloud)
+   * - Firebase cloud sync (Realtime Database + Anonymous Auth)
+   * - Gemini API key stored in Firebase, entered once in Settings
    * - Real-time price tracking via CoinGecko API
    * - AI analysis with multiple persona modes
    * - Alarm system with custom thresholds
-   * - Professional glass-morphism UI with dark mode
-   * - Comprehensive error handling and validation
+   * - Apple-style pastel glass UI with light/dark mode
    */
 
   // ============================================================
@@ -1335,25 +1330,26 @@
   // ============================================================
 
   const CONFIG = {
-    FETCH_INTERVAL_MS: 60000, // 60 seconds
+    FETCH_INTERVAL_MS: 60000,
     HISTORY_LIMIT: 50,
     COINGECKO_API: 'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=eur',
     GEMINI_API_ENDPOINT: 'https://generativelanguage.googleapis.com/v1beta/models',
     DB_PATHS: {
       users: 'users',
       settings: 'settings',
-      history: 'history'
+      history: 'history',
+      secrets: 'secrets'
     }
   };
 
   const FIREBASE_CONFIG = {
-    apiKey: "AIzaSyCKvQqzlv3RLn9w3_eZI8-5kyZQVFbYJWw",
-    authDomain: "higercoin-3151d.firebaseapp.com",
-    databaseURL: "https://higercoin-3151d-default-rtdb.firebaseio.com",
-    projectId: "higercoin-3151d",
-    storageBucket: "higercoin-3151d.appspot.com",
-    messagingSenderId: "1049556388970",
-    appId: "1:1049556388970:web:12b91ab9cc6b509f0c5f38"
+    apiKey: "AIzaSyBWoXamyCqsAer6JYPy5u1l23RtkCMbMZg",
+    authDomain: "higercoin-btc.firebaseapp.com",
+    databaseURL: "https://higercoin-btc-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "higercoin-btc",
+    storageBucket: "higercoin-btc.firebasestorage.app",
+    messagingSenderId: "57008135677",
+    appId: "1:57008135677:web:0433e3cb00f24c45438d94"
   };
 
   // ============================================================
@@ -1369,8 +1365,9 @@
       btcAmount: 0,
       baseEur: 0,
       geminiApiKey: null,
-      geminiModel: 'gemini-1.5-flash',
-      personaMode: 'neutral'
+      geminiModel: 'gemini-2.5-flash',
+      personaMode: 'neutral',
+      soundEnabled: true
     },
     isConnected: false,
     isSyncing: false
@@ -1389,49 +1386,57 @@
   const DOM = {};
 
   function cacheDOM() {
-    // Header & Status
     DOM.statusIndicator = document.getElementById('statusIndicator');
     DOM.settingsBtn = document.getElementById('settingsBtn');
     DOM.themeBtn = document.getElementById('themeBtn');
     DOM.statusBanner = document.getElementById('statusBanner');
 
-    // Hero Section
     DOM.heroAmount = document.getElementById('heroAmount');
     DOM.heroTimestamp = document.getElementById('heroTimestamp');
 
-    // Cards
     DOM.priceCard = document.getElementById('priceCard');
     DOM.plCard = document.getElementById('plCard');
     DOM.change2hCard = document.getElementById('change2hCard');
     DOM.amountCard = document.getElementById('amountCard');
 
-    // Time Cards & Charts
     DOM.timeCards = document.getElementById('timeCards');
     DOM.sparkline = document.getElementById('sparkline');
     DOM.sparklineEmpty = document.getElementById('sparklineEmpty');
 
-    // Table
     DOM.historyTable = document.getElementById('historyTable');
+    DOM.historyEmpty = document.getElementById('historyEmpty');
 
-    // AI Section
     DOM.aiBtn = document.getElementById('aiBtn');
     DOM.aiResult = document.getElementById('aiResult');
+    DOM.aiKeyNotice = document.getElementById('aiKeyNotice');
+    DOM.aiKeyNoticeBtn = document.getElementById('aiKeyNoticeBtn');
     DOM.modelSelect = document.getElementById('modelSelect');
     DOM.personaSelect = document.getElementById('personaSelect');
 
-    // Modal
     DOM.settingsModal = document.getElementById('settingsModal');
     DOM.closeModal = document.getElementById('closeModal');
     DOM.cancelBtn = document.getElementById('cancelBtn');
     DOM.saveBtn = document.getElementById('saveBtn');
+    DOM.modalTabs = document.querySelectorAll('.modal-tab');
+    DOM.modalPanels = document.querySelectorAll('.modal-panel');
 
-    // Form Inputs
     DOM.deviceIdInput = document.getElementById('deviceIdInput');
     DOM.btcAmountInput = document.getElementById('btcAmountInput');
     DOM.baseEurInput = document.getElementById('baseEurInput');
     DOM.geminiKeyInput = document.getElementById('geminiKeyInput');
+    DOM.toggleKeyVisibility = document.getElementById('toggleKeyVisibility');
+    DOM.modelSelectSettings = document.getElementById('modelSelectSettings');
+    DOM.personaSelectSettings = document.getElementById('personaSelectSettings');
+    DOM.soundToggle = document.getElementById('soundToggle');
     DOM.alarmsList = document.getElementById('alarmsList');
     DOM.addAlarmBtn = document.getElementById('addAlarmBtn');
+
+    DOM.alarmModal = document.getElementById('alarmModal');
+    DOM.closeAlarmModal = document.getElementById('closeAlarmModal');
+    DOM.cancelAlarmBtn = document.getElementById('cancelAlarmBtn');
+    DOM.confirmAlarmBtn = document.getElementById('confirmAlarmBtn');
+    DOM.alarmMinInput = document.getElementById('alarmMinInput');
+    DOM.alarmMaxInput = document.getElementById('alarmMaxInput');
   }
 
   // ============================================================
@@ -1441,31 +1446,31 @@
   async function initFirebase() {
     try {
       firebase.initializeApp(FIREBASE_CONFIG);
-      
+
       const auth = firebase.auth();
       const db = firebase.database();
 
       auth.onAuthStateChanged(async (user) => {
         if (user) {
           state.uid = user.uid;
-          DOM.deviceIdInput.value = `Device: ${user.uid.substring(0, 12)}...`;
+          DOM.deviceIdInput.value = `Device: ${user.uid.substring(0, 12)}…`;
           setConnected(true);
           showStatus('✅ Connected to Firebase', 'success');
-          
-          // Load cloud data
+
           await loadCloudSettings();
           await loadCloudHistory();
-          
-          // Start listening for changes
+
           listenSettings(db);
           listenHistory(db);
+
+          syncSettingsToUI();
+          updateAIKeyNoticeVisibility();
         } else {
           setConnected(false);
-          showStatus('⚠️ Offline mode - Using local data', 'warning');
+          showStatus('⚠️ Offline mode — using local data', 'warning');
         }
       });
 
-      // Sign in anonymously
       try {
         await auth.signInAnonymously();
       } catch (err) {
@@ -1480,24 +1485,42 @@
 
   function listenSettings(db) {
     if (!state.uid) return;
-    
+
     const settingsRef = db.ref(`${CONFIG.DB_PATHS.users}/${state.uid}/${CONFIG.DB_PATHS.settings}`);
     settingsRef.on('value', async (snap) => {
       if (snap.exists()) {
         const data = snap.val();
         state.settings.btcAmount = data.btcAmount || 0;
         state.settings.baseEur = data.baseEur || 0;
+        state.settings.geminiModel = data.geminiModel || state.settings.geminiModel;
+        state.settings.personaMode = data.personaMode || state.settings.personaMode;
+        state.settings.soundEnabled = data.soundEnabled !== undefined ? data.soundEnabled : state.settings.soundEnabled;
         DOM.amountCard.textContent = state.settings.btcAmount.toFixed(5);
+        syncModelPersonaUI();
         await updateDashboard();
       }
     }, (err) => {
       console.error('Settings listener error:', err);
     });
+
+    // Separate secure-ish path for the API key so it's easy to secure with its own rule later
+    const secretRef = db.ref(`${CONFIG.DB_PATHS.users}/${state.uid}/${CONFIG.DB_PATHS.secrets}`);
+    secretRef.on('value', (snap) => {
+      if (snap.exists()) {
+        const data = snap.val();
+        state.settings.geminiApiKey = data.geminiApiKey || null;
+      } else {
+        state.settings.geminiApiKey = null;
+      }
+      updateAIKeyNoticeVisibility();
+    }, (err) => {
+      console.error('Secrets listener error:', err);
+    });
   }
 
   function listenHistory(db) {
     if (!state.uid) return;
-    
+
     const historyRef = db.ref(`${CONFIG.DB_PATHS.users}/${state.uid}/${CONFIG.DB_PATHS.history}`);
     historyRef.orderByChild('ts').limitToLast(CONFIG.HISTORY_LIMIT).on('value', (snap) => {
       state.history = [];
@@ -1522,7 +1545,18 @@
         const data = snap.val();
         state.settings.btcAmount = data.btcAmount || 0;
         state.settings.baseEur = data.baseEur || 0;
+        state.settings.geminiModel = data.geminiModel || state.settings.geminiModel;
+        state.settings.personaMode = data.personaMode || state.settings.personaMode;
+        state.settings.soundEnabled = data.soundEnabled !== undefined ? data.soundEnabled : state.settings.soundEnabled;
       }
+
+      const secretSnap = await db.ref(`${CONFIG.DB_PATHS.users}/${state.uid}/${CONFIG.DB_PATHS.secrets}`).once('value');
+      if (secretSnap.exists()) {
+        state.settings.geminiApiKey = secretSnap.val().geminiApiKey || null;
+      }
+
+      DOM.amountCard.textContent = state.settings.btcAmount.toFixed(5);
+      syncModelPersonaUI();
     } catch (err) {
       console.error('Load cloud settings error:', err);
     }
@@ -1542,6 +1576,26 @@
     }
   }
 
+  function syncModelPersonaUI() {
+    DOM.modelSelect.value = state.settings.geminiModel;
+    DOM.personaSelect.value = state.settings.personaMode;
+    DOM.modelSelectSettings.value = state.settings.geminiModel;
+    DOM.personaSelectSettings.value = state.settings.personaMode;
+  }
+
+  function syncSettingsToUI() {
+    DOM.btcAmountInput.value = state.settings.btcAmount || '';
+    DOM.baseEurInput.value = state.settings.baseEur || '';
+    DOM.geminiKeyInput.value = state.settings.geminiApiKey || '';
+    DOM.soundToggle.checked = !!state.settings.soundEnabled;
+    syncModelPersonaUI();
+  }
+
+  function updateAIKeyNoticeVisibility() {
+    const hasKey = !!(state.settings.geminiApiKey && state.settings.geminiApiKey.trim());
+    DOM.aiKeyNotice.style.display = hasKey ? 'none' : 'flex';
+  }
+
   // ============================================================
   // PRICE & DASHBOARD UPDATES
   // ============================================================
@@ -1550,16 +1604,15 @@
     try {
       const response = await fetch(CONFIG.COINGECKO_API);
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      
+
       const data = await response.json();
       const price = data?.bitcoin?.eur;
-      
+
       if (!price || isNaN(price)) throw new Error('Invalid price data');
 
       if (price !== state.lastPrice) {
         state.lastPrice = price;
-        
-        // Add to history
+
         const entry = {
           ts: Date.now(),
           price: price,
@@ -1570,7 +1623,6 @@
           state.history.shift();
         }
 
-        // Save to Firebase
         if (state.uid) {
           try {
             const db = firebase.database();
@@ -1581,10 +1633,8 @@
           }
         }
 
-        // Check alarms
         checkAlarms(entry.balance);
-        
-        // Render UI
+
         renderDashboard(price);
         renderHistory();
         renderSparkline();
@@ -1602,19 +1652,16 @@
     const rec2h = findClosestHistory(2);
     const change2h = rec2h ? ((balance - rec2h.balance) * 100) : null;
 
-    // Update hero
     DOM.heroAmount.textContent = `€${balance.toFixed(2)}`;
     DOM.heroAmount.classList.remove('loading');
-    DOM.heroTimestamp.textContent = `Updated: ${new Date().toLocaleTimeString()}`;
+    DOM.heroTimestamp.textContent = `Updated ${new Date().toLocaleTimeString()}`;
 
-    // Update cards
     DOM.priceCard.textContent = `€${price.toFixed(2)}`;
     DOM.priceCard.classList.remove('loading');
 
     const plClass = totalCents >= 0 ? 'positive' : 'negative';
     DOM.plCard.textContent = `${totalCents >= 0 ? '+' : ''}${totalCents.toFixed(0)}¢`;
     DOM.plCard.className = `card-value ${plClass}`;
-    DOM.plCard.classList.remove('loading');
 
     if (change2h !== null) {
       const change2hClass = change2h >= 0 ? 'positive' : 'negative';
@@ -1635,7 +1682,7 @@
       const rec = findClosestHistory(t.hours);
       if (!rec || !state.lastPrice) {
         return `
-          <div class="time-card">
+          <div class="time-card glass">
             <div class="time-card-label">${t.label}</div>
             <div class="time-card-value loading">—</div>
           </div>
@@ -1645,7 +1692,7 @@
       const change = ((balance - rec.balance) * 100);
       const changeClass = change >= 0 ? 'positive' : 'negative';
       return `
-        <div class="time-card">
+        <div class="time-card glass">
           <div class="time-card-label">${t.label}</div>
           <div class="time-card-value ${changeClass}">${change >= 0 ? '+' : ''}${change.toFixed(0)}¢</div>
         </div>
@@ -1671,32 +1718,41 @@
     const height = 140;
     const points = prices.map((p, i) => {
       const x = (i / (prices.length - 1)) * width;
-      const y = height - ((p - min) / range) * (height * 0.8);
+      const y = height - ((p - min) / range) * (height * 0.75) - height * 0.1;
       return [x, y];
     });
 
-    const pathData = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p[0]} ${p[1]}`).join(' ');
+    const pathData = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p[0].toFixed(2)} ${p[1].toFixed(2)}`).join(' ');
     const fillPath = `${pathData} L ${width} ${height} L 0 ${height} Z`;
+    const isUp = prices[prices.length - 1] >= prices[0];
+    const lineColor = isUp ? '#30D158' : '#FF453A';
 
     DOM.sparkline.innerHTML = `
       <defs>
         <linearGradient id="chart-grad" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" style="stop-color:#34C759;stop-opacity:0.4" />
-          <stop offset="100%" style="stop-color:#34C759;stop-opacity:0.05" />
+          <stop offset="0%" style="stop-color:${lineColor};stop-opacity:0.35" />
+          <stop offset="100%" style="stop-color:${lineColor};stop-opacity:0.02" />
         </linearGradient>
       </defs>
-      <path d="${pathData}" stroke="#34C759" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+      <path d="${pathData}" stroke="${lineColor}" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round" />
       <path d="${fillPath}" fill="url(#chart-grad)" />
-      <circle cx="${points[points.length-1][0]}" cy="${points[points.length-1][1]}" r="4" fill="#34C759" stroke="white" stroke-width="2" />
+      <circle cx="${points[points.length-1][0].toFixed(2)}" cy="${points[points.length-1][1].toFixed(2)}" r="4" fill="${lineColor}" stroke="white" stroke-width="2" />
     `;
   }
 
   function renderHistory() {
+    if (state.history.length === 0) {
+      DOM.historyTable.innerHTML = '';
+      DOM.historyEmpty.style.display = 'block';
+      return;
+    }
+    DOM.historyEmpty.style.display = 'none';
+
     DOM.historyTable.innerHTML = state.history.slice(-10).reverse().map((entry, i) => {
       const prevEntry = state.history[state.history.length - 1 - i - 1];
       const change = prevEntry ? ((entry.balance - prevEntry.balance) * 100) : 0;
       const changeClass = change >= 0 ? 'positive' : 'negative';
-      
+
       return `
         <tr>
           <td>${new Date(entry.ts).toLocaleTimeString()}</td>
@@ -1712,11 +1768,198 @@
     if (state.history.length === 0) return null;
     const now = Date.now();
     const targetMs = hours * 3600000;
-    
+
     return state.history.reduce((closest, entry) => {
       const diff = Math.abs(now - entry.ts - targetMs);
       return !closest || diff < Math.abs(now - closest.ts - targetMs) ? entry : closest;
     }, null);
+  }
+
+  // ============================================================
+  // ALARMS
+  // ============================================================
+
+  function checkAlarms(balance) {
+    state.alarms.forEach(alarmRule => {
+      const match = alarmRule.match(/Min:\s*€?([\d.]+).*Max:\s*€?([\d.]+)/i);
+      if (!match) return;
+
+      const min = parseFloat(match[1]);
+      const max = parseFloat(match[2]);
+
+      if (balance <= min || balance >= max) {
+        if (state.settings.soundEnabled) playAlarmSound();
+        showStatus(`🔔 Alarm triggered — Portfolio: €${balance.toFixed(2)}`, 'warning');
+      }
+    });
+  }
+
+  function playAlarmSound() {
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+
+      const ctx = new AudioCtx();
+      const t = ctx.currentTime;
+
+      for (let i = 0; i < 6; i++) {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(800 + i * 150, t + i * 0.08);
+
+        const start = t + i * 0.08;
+        gain.gain.setValueAtTime(0.2, start);
+        gain.gain.exponentialRampToValueAtTime(0.01, start + 0.15);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(start);
+        osc.stop(start + 0.2);
+      }
+
+      setTimeout(() => ctx.close(), 600);
+    } catch (e) {
+      // Audio not available
+    }
+  }
+
+  function renderAlarmsList() {
+    DOM.alarmsList.innerHTML = state.alarms.length === 0
+      ? '<p style="font-size: 12px; color: var(--tertiary); text-align: center; padding: 12px;">No alarms configured yet</p>'
+      : state.alarms.map((alarm, i) => `
+        <div class="alarm-item">
+          <span class="alarm-item-text">${escapeHtml(alarm)}</span>
+          <button class="btn-small" onclick="deleteAlarm(${i})">Delete</button>
+        </div>
+      `).join('');
+  }
+
+  function deleteAlarm(index) {
+    state.alarms.splice(index, 1);
+    localStorage.setItem('higercoinAlarms', JSON.stringify(state.alarms));
+    renderAlarmsList();
+    showStatus('✅ Alarm deleted', 'success');
+  }
+
+  window.deleteAlarm = deleteAlarm;
+
+  function openAlarmModal() {
+    DOM.alarmMinInput.value = '';
+    DOM.alarmMaxInput.value = '';
+    DOM.alarmModal.classList.add('visible');
+    setTimeout(() => DOM.alarmMinInput.focus(), 100);
+  }
+
+  function closeAlarmModal() {
+    DOM.alarmModal.classList.remove('visible');
+  }
+
+  function confirmAlarm() {
+    const min = parseFloat(DOM.alarmMinInput.value);
+    const max = parseFloat(DOM.alarmMaxInput.value);
+
+    if (isNaN(min) || isNaN(max) || min < 0 || max < 0 || min >= max) {
+      showStatus('❌ Invalid values — Min must be less than Max', 'error');
+      return;
+    }
+
+    const alarm = `Min: €${min.toFixed(2)}, Max: €${max.toFixed(2)}`;
+    state.alarms.push(alarm);
+    localStorage.setItem('higercoinAlarms', JSON.stringify(state.alarms));
+    renderAlarmsList();
+    showStatus('✅ Alarm added', 'success');
+    closeAlarmModal();
+  }
+
+  // ============================================================
+  // SETTINGS MODAL
+  // ============================================================
+
+  function openSettings() {
+    DOM.settingsModal.classList.add('visible');
+    syncSettingsToUI();
+    renderAlarmsList();
+  }
+
+  function closeSettings() {
+    DOM.settingsModal.classList.remove('visible');
+  }
+
+  function switchModalTab(tabName) {
+    DOM.modalTabs.forEach(tab => {
+      tab.classList.toggle('active', tab.dataset.tab === tabName);
+    });
+    DOM.modalPanels.forEach(panel => {
+      panel.classList.toggle('active', panel.dataset.panel === tabName);
+    });
+  }
+
+  async function saveSettings() {
+    const btcAmount = parseFloat(DOM.btcAmountInput.value) || 0;
+    const baseEur = parseFloat(DOM.baseEurInput.value) || 0;
+    const geminiKey = DOM.geminiKeyInput.value.trim();
+    const geminiModel = DOM.modelSelectSettings.value;
+    const personaMode = DOM.personaSelectSettings.value;
+    const soundEnabled = DOM.soundToggle.checked;
+
+    if (btcAmount < 0 || baseEur < 0) {
+      showStatus('❌ Values cannot be negative', 'error');
+      return;
+    }
+
+    state.settings.btcAmount = btcAmount;
+    state.settings.baseEur = baseEur;
+    state.settings.geminiApiKey = geminiKey || null;
+    state.settings.geminiModel = geminiModel;
+    state.settings.personaMode = personaMode;
+    state.settings.soundEnabled = soundEnabled;
+
+    // Local fallback cache (device-only, non-sensitive convenience copy)
+    localStorage.setItem('higercoinBtcAmount', btcAmount.toString());
+    localStorage.setItem('higercoinBaseEur', baseEur.toString());
+    localStorage.setItem('higercoinModel', geminiModel);
+    localStorage.setItem('higercoinPersona', personaMode);
+    localStorage.setItem('higercoinSound', soundEnabled ? '1' : '0');
+
+    DOM.saveBtn.disabled = true;
+    DOM.saveBtn.textContent = 'Saving…';
+
+    if (state.uid) {
+      try {
+        const db = firebase.database();
+        await db.ref(`${CONFIG.DB_PATHS.users}/${state.uid}/${CONFIG.DB_PATHS.settings}`).set({
+          btcAmount: btcAmount,
+          baseEur: baseEur,
+          geminiModel: geminiModel,
+          personaMode: personaMode,
+          soundEnabled: soundEnabled,
+          updatedAt: firebase.database.ServerValue.TIMESTAMP
+        });
+
+        // API key stored separately in Firebase so it can be governed by its own security rule
+        await db.ref(`${CONFIG.DB_PATHS.users}/${state.uid}/${CONFIG.DB_PATHS.secrets}`).set({
+          geminiApiKey: geminiKey || null,
+          updatedAt: firebase.database.ServerValue.TIMESTAMP
+        });
+
+        showStatus('✅ Settings saved to cloud', 'success');
+      } catch (err) {
+        console.error('Save to Firebase error:', err);
+        showStatus('⚠️ Saved locally — cloud sync failed', 'warning');
+      }
+    } else {
+      showStatus('✅ Settings saved locally', 'success');
+    }
+
+    DOM.saveBtn.disabled = false;
+    DOM.saveBtn.textContent = 'Save Changes';
+
+    DOM.amountCard.textContent = btcAmount.toFixed(5);
+    syncModelPersonaUI();
+    updateAIKeyNoticeVisibility();
+    closeSettings();
+    await updateDashboard();
   }
 
   // ============================================================
@@ -1731,7 +1974,7 @@
       technical: 'You are a technical analysis expert. Analyze chart patterns, support/resistance levels, and momentum indicators.'
     };
 
-    const basePrompt = `
+    return `
 ${personas[state.settings.personaMode] || personas.neutral}
 
 Provide a brief, technical assessment based ONLY on the given data. Do not speculate or claim certainty.
@@ -1747,18 +1990,18 @@ Respond with this exact format:
 Market Direction: [UP / DOWN / NEUTRAL]
 Observation: (1-2 sentences based on data)
 Technical Reason: (1-2 sentences explaining the data)`;
-
-    return basePrompt;
   }
 
   async function runAIAnalysis() {
     if (!state.settings.geminiApiKey) {
-      showStatus('❌ API key not configured', 'error');
+      showStatus('❌ Add a Gemini API key in Settings first', 'error');
+      openSettings();
+      switchModalTab('ai');
       return;
     }
 
     if (!state.lastPrice) {
-      showStatus('❌ Waiting for price data...', 'error');
+      showStatus('❌ Waiting for price data…', 'error');
       return;
     }
 
@@ -1774,7 +2017,8 @@ Technical Reason: (1-2 sentences explaining the data)`;
       const cents12h = rec12h ? ((balance - rec12h.balance) * 100).toFixed(2) : 'N/A';
 
       const prompt = buildPrompt(balance, state.lastPrice, totalCents, cents2h, cents12h);
-      const url = `${CONFIG.GEMINI_API_ENDPOINT}/${state.settings.geminiModel}:generateContent?key=${encodeURIComponent(state.settings.geminiApiKey)}`;
+      const model = DOM.modelSelect.value || state.settings.geminiModel;
+      const url = `${CONFIG.GEMINI_API_ENDPOINT}/${model}:generateContent?key=${encodeURIComponent(state.settings.geminiApiKey)}`;
 
       const response = await fetch(url, {
         method: 'POST',
@@ -1787,7 +2031,9 @@ Technical Reason: (1-2 sentences explaining the data)`;
       });
 
       if (!response.ok) {
-        throw new Error(`API error: ${response.status} ${response.statusText}`);
+        const errBody = await response.json().catch(() => null);
+        const msg = errBody?.error?.message || `API error: ${response.status} ${response.statusText}`;
+        throw new Error(msg);
       }
 
       const data = await response.json();
@@ -1798,7 +2044,7 @@ Technical Reason: (1-2 sentences explaining the data)`;
       }
 
       DOM.aiResult.innerHTML = formatAIResponse(responseText);
-      playAnalysisChime(responseText);
+      if (state.settings.soundEnabled) playAnalysisChime(responseText);
       showStatus('✅ Analysis complete', 'success');
     } catch (err) {
       console.error('AI analysis error:', err);
@@ -1811,7 +2057,7 @@ Technical Reason: (1-2 sentences explaining the data)`;
 
   function formatAIResponse(text) {
     const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
-    
+
     return '<div class="ai-response">' + lines.map(line => {
       const colonIdx = line.indexOf(':');
       if (colonIdx > -1) {
@@ -1843,12 +2089,12 @@ Technical Reason: (1-2 sentences explaining the data)`;
         const gain = ctx.createGain();
         osc.type = 'sine';
         osc.frequency.value = freq;
-        
+
         const start = t + i * 0.08;
         gain.gain.setValueAtTime(0.05, start);
         gain.gain.exponentialRampToValueAtTime(0.15, start + 0.05);
         gain.gain.exponentialRampToValueAtTime(0.01, start + 0.25);
-        
+
         osc.connect(gain);
         gain.connect(ctx.destination);
         osc.start(start);
@@ -1859,140 +2105,6 @@ Technical Reason: (1-2 sentences explaining the data)`;
     } catch (e) {
       // Audio not available
     }
-  }
-
-  // ============================================================
-  // ALARMS
-  // ============================================================
-
-  function checkAlarms(balance) {
-    state.alarms.forEach(alarmRule => {
-      const match = alarmRule.match(/Min:\s*€?([\d.]+).*Max:\s*€?([\d.]+)/i);
-      if (!match) return;
-
-      const min = parseFloat(match[1]);
-      const max = parseFloat(match[2]);
-
-      if (balance <= min || balance >= max) {
-        playAlarmSound();
-        showStatus(`🔔 Alarm triggered! Portfolio: €${balance.toFixed(2)}`, 'warning');
-      }
-    });
-  }
-
-  function playAlarmSound() {
-    try {
-      const AudioCtx = window.AudioContext || window.webkitAudioContext;
-      if (!AudioCtx) return;
-
-      const ctx = new AudioCtx();
-      const t = ctx.currentTime;
-
-      for (let i = 0; i < 6; i++) {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(800 + i * 150, t + i * 0.08);
-        
-        const start = t + i * 0.08;
-        gain.gain.setValueAtTime(0.2, start);
-        gain.gain.exponentialRampToValueAtTime(0.01, start + 0.15);
-        
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start(start);
-        osc.stop(start + 0.2);
-      }
-
-      setTimeout(() => ctx.close(), 600);
-    } catch (e) {
-      // Audio not available
-    }
-  }
-
-  function renderAlarmsList() {
-    DOM.alarmsList.innerHTML = state.alarms.length === 0 
-      ? '<p style="font-size: 12px; color: var(--sub-light); text-align: center; padding: 12px;">No alarms configured yet</p>'
-      : state.alarms.map((alarm, i) => `
-        <div class="alarm-item">
-          <span class="alarm-item-text">${escapeHtml(alarm)}</span>
-          <button class="btn-small" onclick="deleteAlarm(${i})">Delete</button>
-        </div>
-      `).join('');
-  }
-
-  function deleteAlarm(index) {
-    state.alarms.splice(index, 1);
-    localStorage.setItem('higercoinAlarms', JSON.stringify(state.alarms));
-    renderAlarmsList();
-    showStatus('✅ Alarm deleted', 'success');
-  }
-
-  // Make deleteAlarm accessible globally
-  window.deleteAlarm = deleteAlarm;
-
-  // ============================================================
-  // SETTINGS MODAL
-  // ============================================================
-
-  function openSettings() {
-    DOM.settingsModal.classList.add('visible');
-    DOM.btcAmountInput.value = state.settings.btcAmount;
-    DOM.baseEurInput.value = state.settings.baseEur;
-    DOM.geminiKeyInput.value = state.settings.geminiApiKey || '';
-    DOM.modelSelect.value = state.settings.geminiModel;
-    DOM.personaSelect.value = state.settings.personaMode;
-    renderAlarmsList();
-  }
-
-  function closeSettings() {
-    DOM.settingsModal.classList.remove('visible');
-  }
-
-  async function saveSettings() {
-    const btcAmount = parseFloat(DOM.btcAmountInput.value) || 0;
-    const baseEur = parseFloat(DOM.baseEurInput.value) || 0;
-    const geminiKey = DOM.geminiKeyInput.value.trim();
-
-    if (btcAmount < 0 || baseEur < 0) {
-      showStatus('❌ Values cannot be negative', 'error');
-      return;
-    }
-
-    state.settings.btcAmount = btcAmount;
-    state.settings.baseEur = baseEur;
-    state.settings.geminiApiKey = geminiKey;
-    state.settings.geminiModel = DOM.modelSelect.value;
-    state.settings.personaMode = DOM.personaSelect.value;
-
-    // Save to localStorage
-    localStorage.setItem('higercoinBtcAmount', btcAmount.toString());
-    localStorage.setItem('higercoinBaseEur', baseEur.toString());
-    localStorage.setItem('higercoinGeminiKey', geminiKey);
-    localStorage.setItem('higercoinModel', state.settings.geminiModel);
-    localStorage.setItem('higercoinPersona', state.settings.personaMode);
-
-    // Save to Firebase
-    if (state.uid) {
-      try {
-        const db = firebase.database();
-        await db.ref(`${CONFIG.DB_PATHS.users}/${state.uid}/${CONFIG.DB_PATHS.settings}`).set({
-          btcAmount: btcAmount,
-          baseEur: baseEur,
-          updatedAt: firebase.database.ServerValue.TIMESTAMP
-        });
-        showStatus('✅ Settings saved to cloud', 'success');
-      } catch (err) {
-        console.error('Save to Firebase error:', err);
-        showStatus('⚠️ Saved locally (cloud sync failed)', 'warning');
-      }
-    } else {
-      showStatus('✅ Settings saved locally', 'success');
-    }
-
-    DOM.amountCard.textContent = btcAmount.toFixed(5);
-    closeSettings();
-    await updateDashboard();
   }
 
   // ============================================================
@@ -2023,14 +2135,8 @@ Technical Reason: (1-2 sentences explaining the data)`;
   }
 
   function escapeHtml(text) {
-    const map = {
-      '&': '&amp;',
-      '<': '&lt;',
-      '>': '&gt;',
-      '"': '&quot;',
-      "'": '&#39;'
-    };
-    return text.replace(/[&<>"']/g, m => map[m]);
+    const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+    return String(text).replace(/[&<>"']/g, m => map[m]);
   }
 
   function toggleTheme() {
@@ -2057,30 +2163,39 @@ Technical Reason: (1-2 sentences explaining the data)`;
     DOM.saveBtn.addEventListener('click', saveSettings);
     DOM.themeBtn.addEventListener('click', toggleTheme);
     DOM.aiBtn.addEventListener('click', runAIAnalysis);
-    DOM.addAlarmBtn.addEventListener('click', () => {
-      const minVal = prompt('Enter minimum EUR value:', '50');
-      if (minVal === null) return;
+    DOM.aiKeyNoticeBtn.addEventListener('click', () => {
+      openSettings();
+      switchModalTab('ai');
+    });
 
-      const maxVal = prompt('Enter maximum EUR value:', '200');
-      if (maxVal === null) return;
+    DOM.modalTabs.forEach(tab => {
+      tab.addEventListener('click', () => switchModalTab(tab.dataset.tab));
+    });
 
-      const min = parseFloat(minVal);
-      const max = parseFloat(maxVal);
+    DOM.toggleKeyVisibility.addEventListener('click', () => {
+      const isPassword = DOM.geminiKeyInput.type === 'password';
+      DOM.geminiKeyInput.type = isPassword ? 'text' : 'password';
+      DOM.toggleKeyVisibility.textContent = isPassword ? '🙈' : '👁️';
+    });
 
-      if (isNaN(min) || isNaN(max) || min < 0 || max < 0 || min >= max) {
-        showStatus('❌ Invalid values. Min must be less than Max', 'error');
-        return;
-      }
+    DOM.addAlarmBtn.addEventListener('click', openAlarmModal);
+    DOM.closeAlarmModal.addEventListener('click', closeAlarmModal);
+    DOM.cancelAlarmBtn.addEventListener('click', closeAlarmModal);
+    DOM.confirmAlarmBtn.addEventListener('click', confirmAlarm);
 
-      const alarm = `Min: €${min.toFixed(2)}, Max: €${max.toFixed(2)}`;
-      state.alarms.push(alarm);
-      localStorage.setItem('higercoinAlarms', JSON.stringify(state.alarms));
-      renderAlarmsList();
-      showStatus('✅ Alarm added', 'success');
+    DOM.modelSelect.addEventListener('change', () => {
+      DOM.modelSelectSettings.value = DOM.modelSelect.value;
+    });
+    DOM.personaSelect.addEventListener('change', () => {
+      DOM.personaSelectSettings.value = DOM.personaSelect.value;
     });
 
     DOM.settingsModal.addEventListener('click', (e) => {
       if (e.target === DOM.settingsModal) closeSettings();
+    });
+
+    DOM.alarmModal.addEventListener('click', (e) => {
+      if (e.target === DOM.alarmModal) closeAlarmModal();
     });
 
     window.addEventListener('resize', () => {
@@ -2095,6 +2210,13 @@ Technical Reason: (1-2 sentences explaining the data)`;
         updateDashboard();
       }
     });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeSettings();
+        closeAlarmModal();
+      }
+    });
   }
 
   // ============================================================
@@ -2105,23 +2227,24 @@ Technical Reason: (1-2 sentences explaining the data)`;
     cacheDOM();
     applyTheme();
 
-    // Load from localStorage
+    // Local fallback cache (used only until Firebase confirms cloud values)
     state.settings.btcAmount = parseFloat(localStorage.getItem('higercoinBtcAmount') || '0');
     state.settings.baseEur = parseFloat(localStorage.getItem('higercoinBaseEur') || '0');
-    state.settings.geminiApiKey = localStorage.getItem('higercoinGeminiKey') || null;
-    state.settings.geminiModel = localStorage.getItem('higercoinModel') || 'gemini-1.5-flash';
+    state.settings.geminiModel = localStorage.getItem('higercoinModel') || 'gemini-2.5-flash';
     state.settings.personaMode = localStorage.getItem('higercoinPersona') || 'neutral';
+    state.settings.soundEnabled = localStorage.getItem('higercoinSound') !== '0';
     state.alarms = JSON.parse(localStorage.getItem('higercoinAlarms') || '[]');
 
     DOM.amountCard.textContent = state.settings.btcAmount.toFixed(5);
+    syncModelPersonaUI();
+    updateAIKeyNoticeVisibility();
 
     bindEvents();
-    showStatus('🔄 Initializing...', 'info');
-    
+    showStatus('🔄 Initializing…', 'info');
+
     await initFirebase();
     await updateDashboard();
 
-    // Start polling
     timers.pollTimer = setInterval(updateDashboard, CONFIG.FETCH_INTERVAL_MS);
   }
 
