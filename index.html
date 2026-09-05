@@ -1,1036 +1,2132 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Higercoin Terminal — Cloud Edition</title>
-<style>
-  :root {
-    --green: #34C759;
-    --red: #FF3B30;
-    --blue: #007AFF;
-    --radius-lg: 20px;
-    --radius-md: 16px;
-    --radius-sm: 12px;
-    --shadow: 0 8px 32px rgba(0,0,0,0.05);
-    --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    --glass-light: rgba(255,255,255,0.6);
-    --glass-border-light: rgba(255,255,255,0.4);
-    --glass-dark: rgba(30,30,30,0.6);
-    --glass-border-dark: rgba(255,255,255,0.08);
-    --text-light: #1c1c1e;
-    --text-dark: #f2f2f7;
-    --sub-light: rgba(60,60,67,0.6);
-    --sub-dark: rgba(235,235,245,0.6);
-  }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#007AFF">
+  <meta name="description" content="Higercoin Terminal Pro - Bitcoin portföy izleme ve AI analiz platformu">
+  <title>Higercoin Terminal Pro</title>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <style>
+    :root {
+      --green: #34C759;
+      --red: #FF3B30;
+      --blue: #007AFF;
+      --orange: #FF9500;
+      --purple: #A855F7;
+      --radius-lg: 20px;
+      --radius-md: 16px;
+      --radius-sm: 12px;
+      --shadow: 0 8px 32px rgba(0,0,0,0.05);
+      --shadow-lg: 0 20px 60px rgba(0,0,0,0.1);
+      --shadow-xl: 0 30px 80px rgba(0,0,0,0.15);
+      --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      --glass-light: rgba(255,255,255,0.7);
+      --glass-border-light: rgba(255,255,255,0.5);
+      --glass-dark: rgba(25,25,30,0.8);
+      --glass-border-dark: rgba(255,255,255,0.1);
+      --text-light: #1c1c1e;
+      --text-dark: #f5f5f7;
+      --sub-light: rgba(60,60,67,0.7);
+      --sub-dark: rgba(240,240,245,0.7);
+    }
 
-  * { box-sizing: border-box; }
-  html, body { margin: 0; padding: 0; }
+    * {
+      box-sizing: border-box;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
 
-  body {
-    font-family: var(--font);
-    color: var(--text-light);
-    min-height: 100vh;
-    background: linear-gradient(160deg, #f2f4f8 0%, #eef1f6 45%, #f6f1f5 100%);
-    transition: background 0.4s ease, color 0.4s ease;
-    padding: 24px 16px 64px;
-    position: relative;
-    overflow-x: hidden;
-  }
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+    }
 
-  body.dark {
-    color: var(--text-dark);
-    background: linear-gradient(160deg, #121214 0%, #17171a 45%, #131315 100%);
-  }
+    body {
+      font-family: var(--font);
+      color: var(--text-light);
+      min-height: 100vh;
+      background: linear-gradient(135deg, #f5f7fa 0%, #f0e9ff 100%);
+      transition: background 0.3s ease, color 0.3s ease;
+      padding: 0;
+      position: relative;
+      overflow-x: hidden;
+    }
 
-  body::before, body::after {
-    content: "";
-    position: fixed;
-    width: 480px; height: 480px;
-    border-radius: 50%;
-    filter: blur(90px);
-    z-index: 0;
-    opacity: 0.35;
-    pointer-events: none;
-    transition: opacity 0.4s ease;
-  }
-  body::before { top: -180px; left: -160px; background: #d9f2e2; }
-  body::after { bottom: -200px; right: -160px; background: #e6ddf5; }
-  body.dark::before { background: #123522; opacity: 0.4; }
-  body.dark::after { background: #241d38; opacity: 0.4; }
+    body.dark {
+      color: var(--text-dark);
+      background: linear-gradient(135deg, #0a0a0e 0%, #1a1530 100%);
+    }
 
-  .container { max-width: 640px; margin: 0 auto; position: relative; z-index: 1; }
+    /* Animated background orbs */
+    body::before,
+    body::after {
+      content: "";
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(100px);
+      z-index: 0;
+      opacity: 0.4;
+      pointer-events: none;
+      animation: float 20s ease-in-out infinite;
+    }
 
-  header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; }
+    body::before {
+      width: 600px;
+      height: 600px;
+      top: -200px;
+      left: -200px;
+      background: radial-gradient(circle, #c3e7ff 0%, transparent 70%);
+    }
 
-  .brand h1 { margin: 0; font-size: 22px; font-weight: 500; letter-spacing: -0.2px; }
-  .brand span { display: block; font-size: 12px; font-weight: 400; color: var(--sub-light); margin-top: 2px; }
-  body.dark .brand span { color: var(--sub-dark); }
+    body::after {
+      width: 500px;
+      height: 500px;
+      bottom: -150px;
+      right: -150px;
+      background: radial-gradient(circle, #e6d5ff 0%, transparent 70%);
+      animation-delay: -5s;
+    }
 
-  .header-actions { display: flex; align-items: center; gap: 10px; }
+    body.dark::before {
+      background: radial-gradient(circle, #1a4d6d 0%, transparent 70%);
+    }
 
-  .cloud-status {
-    width: 36px; height: 36px;
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 16px;
-    border: 1px solid var(--glass-border-light);
-    background: var(--glass-light);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    box-shadow: var(--shadow);
-    transition: box-shadow 0.3s ease, background 0.3s ease, filter 0.3s ease;
-    position: relative;
-  }
-  body.dark .cloud-status { background: var(--glass-dark); border-color: var(--glass-border-dark); }
-  .cloud-status.offline { filter: grayscale(1) opacity(0.55); }
-  .cloud-status.syncing {
-    background: rgba(52,199,89,0.28);
-    box-shadow: 0 0 0 4px rgba(52,199,89,0.18), 0 8px 20px rgba(52,199,89,0.25);
-  }
-  .cloud-status .dot {
-    position: absolute; bottom: -1px; right: -1px;
-    width: 9px; height: 9px; border-radius: 50%;
-    background: var(--sub-light); border: 2px solid #f2f4f8;
-    transition: background 0.3s ease;
-  }
-  body.dark .cloud-status .dot { border-color: #121214; }
-  .cloud-status.connected .dot { background: var(--green); }
-  .cloud-status.offline .dot { background: var(--red); }
+    body.dark::after {
+      background: radial-gradient(circle, #3d1a5c 0%, transparent 70%);
+    }
 
-  .icon-btn {
-    width: 44px; height: 44px;
-    border-radius: 50%;
-    border: 1px solid var(--glass-border-light);
-    background: var(--glass-light);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    box-shadow: var(--shadow);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 18px;
-    cursor: pointer;
-    color: inherit;
-  }
-  body.dark .icon-btn { background: var(--glass-dark); border-color: var(--glass-border-dark); }
-  .icon-btn:active { transform: scale(0.94); }
+    @keyframes float {
+      0%, 100% { transform: translate(0, 0); }
+      25% { transform: translate(30px, -30px); }
+      50% { transform: translate(0, -60px); }
+      75% { transform: translate(-30px, -30px); }
+    }
 
-  .hero { text-align: center; margin: 8px 0 28px; }
-  .hero .label { font-size: 12px; font-weight: 500; letter-spacing: 0.6px; text-transform: uppercase; color: var(--sub-light); }
-  body.dark .hero .label { color: var(--sub-dark); }
-  .hero .amount { font-size: 48px; font-weight: 200; letter-spacing: -1px; margin-top: 6px; transition: opacity 0.5s ease; }
-  .hero .updated { margin-top: 8px; font-size: 12px; color: var(--sub-light); min-height: 16px; }
-  body.dark .hero .updated { color: var(--sub-dark); }
+    .page-wrapper {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
 
-  .status-banner {
-    display: none; text-align: center; font-size: 13px; color: var(--red);
-    background: rgba(255,59,48,0.08); border: 1px solid rgba(255,59,48,0.18);
-    border-radius: var(--radius-sm); padding: 10px 14px; margin-bottom: 20px;
-  }
-  .status-banner.visible { display: block; }
-  .status-banner.info {
-    color: var(--blue);
-    background: rgba(0,122,255,0.08); border-color: rgba(0,122,255,0.18);
-  }
+    .container {
+      max-width: 800px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 24px 16px 100px;
+      flex: 1;
+    }
 
-  .cards-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
-  @media (max-width: 560px) { .cards-grid { grid-template-columns: 1fr; } }
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 32px;
+      gap: 12px;
+    }
 
-  .card {
-    background: var(--glass-light);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid var(--glass-border-light);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow);
-    padding: 18px;
-  }
-  body.dark .card { background: var(--glass-dark); border-color: var(--glass-border-dark); }
+    .brand {
+      flex: 1;
+    }
 
-  .card .card-label { font-size: 11px; font-weight: 500; letter-spacing: 0.5px; text-transform: uppercase; color: var(--sub-light); margin-bottom: 8px; }
-  body.dark .card .card-label { color: var(--sub-dark); }
-  .card .card-value { font-size: 21px; font-weight: 400; letter-spacing: -0.3px; transition: opacity 0.5s ease; }
-  .card .card-value.positive { color: var(--green); }
-  .card .card-value.negative { color: var(--red); }
+    .brand h1 {
+      margin: 0;
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, var(--blue), var(--purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
 
-  section.block { margin-bottom: 24px; }
-  .block-title { font-size: 14px; font-weight: 500; color: var(--sub-light); margin: 0 0 12px 4px; }
-  body.dark .block-title { color: var(--sub-dark); }
+    .brand p {
+      margin: 4px 0 0 0;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--sub-light);
+      letter-spacing: 0.5px;
+    }
 
-  .time-machine { display: flex; gap: 12px; overflow-x: auto; padding: 2px 2px 10px; -webkit-overflow-scrolling: touch; scrollbar-width: thin; }
-  .time-card {
-    min-width: 128px; flex: 0 0 auto;
-    background: var(--glass-light);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid var(--glass-border-light);
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow);
-    padding: 14px;
-  }
-  body.dark .time-card { background: var(--glass-dark); border-color: var(--glass-border-dark); }
-  .time-card .card-label { font-size: 10.5px; }
-  .time-card .time-diff { font-size: 17px; font-weight: 400; }
-  .time-card .time-diff.positive { color: var(--green); }
-  .time-card .time-diff.negative { color: var(--red); }
-  .time-card .time-diff.waiting { font-size: 13px; font-weight: 400; color: var(--sub-light); }
-  body.dark .time-card .time-diff.waiting { color: var(--sub-dark); }
+    body.dark .brand p {
+      color: var(--sub-dark);
+    }
 
-  .sparkline-card { padding: 18px 14px 10px; }
-  .sparkline-wrap { width: 100%; height: 110px; position: relative; }
-  #sparkline { width: 100%; height: 100%; display: block; }
-  .sparkline-empty {
-    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-    font-size: 12.5px; color: var(--sub-light); text-align: center; padding: 0 20px;
-  }
-  body.dark .sparkline-empty { color: var(--sub-dark); }
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
 
-  .ai-panel { padding: 20px; }
-  .ai-button {
-    width: 100%; min-height: 48px; border: none; border-radius: var(--radius-md);
-    background: linear-gradient(135deg, #6fb7ff, #8f8bf0);
-    color: #fff; font-family: inherit; font-size: 15px; font-weight: 500; letter-spacing: -0.1px;
-    cursor: pointer; margin-top: 4px;
-  }
-  .ai-button:active { transform: scale(0.99); }
-  .ai-button:disabled { opacity: 0.6; cursor: default; }
+    .status-indicator {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      border: 2px solid var(--glass-border-light);
+      background: var(--glass-light);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      box-shadow: var(--shadow);
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      position: relative;
+      cursor: pointer;
+    }
 
-  .spinner {
-    width: 26px; height: 26px; margin: 18px auto 4px; border-radius: 50%;
-    border: 2px solid rgba(120,120,128,0.2); border-top-color: var(--blue);
-    animation: spin 0.8s linear infinite;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
+    body.dark .status-indicator {
+      background: var(--glass-dark);
+      border-color: var(--glass-border-dark);
+    }
 
-  .ai-response { margin-top: 16px; display: flex; flex-direction: column; gap: 10px; }
-  .ai-line { display: flex; flex-direction: column; gap: 2px; }
-  .ai-label { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; color: var(--sub-light); }
-  body.dark .ai-label { color: var(--sub-dark); }
-  .ai-text { font-size: 15px; font-weight: 400; line-height: 1.45; }
+    .status-indicator:hover {
+      transform: scale(1.08);
+      box-shadow: var(--shadow-lg);
+    }
 
-  .ai-error { margin-top: 14px; font-size: 13.5px; color: var(--red); }
-  .ai-disclaimer { margin-top: 16px; font-size: 11px; color: var(--sub-light); line-height: 1.4; }
-  body.dark .ai-disclaimer { color: var(--sub-dark); }
+    .status-indicator.connected::after {
+      content: "";
+      position: absolute;
+      bottom: 2px;
+      right: 2px;
+      width: 12px;
+      height: 12px;
+      background: var(--green);
+      border: 2px solid white;
+      border-radius: 50%;
+      box-shadow: 0 0 8px rgba(52, 199, 89, 0.6);
+    }
 
-  footer { text-align: center; margin-top: 20px; font-size: 11px; color: var(--sub-light); }
-  body.dark footer { color: var(--sub-dark); }
-  footer .uid { display: block; margin-top: 4px; font-size: 10px; opacity: 0.7; letter-spacing: 0.2px; }
+    body.dark .status-indicator.connected::after {
+      border-color: #191923;
+    }
 
-  .modal-overlay {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.28); backdrop-filter: blur(6px);
-    display: flex; align-items: center; justify-content: center; padding: 20px;
-    opacity: 0; pointer-events: none; transition: opacity 0.25s ease; z-index: 1000;
-  }
-  .modal-overlay.active { opacity: 1; pointer-events: all; }
+    .status-indicator.offline::after {
+      content: "";
+      position: absolute;
+      bottom: 2px;
+      right: 2px;
+      width: 12px;
+      height: 12px;
+      background: var(--red);
+      border: 2px solid white;
+      border-radius: 50%;
+      opacity: 0.6;
+    }
 
-  .modal {
-    width: 100%; max-width: 380px;
-    background: rgba(255,255,255,0.85);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
-    border: 1px solid var(--glass-border-light);
-    border-radius: var(--radius-lg);
-    box-shadow: 0 20px 60px rgba(0,0,0,0.15);
-    padding: 26px;
-    max-height: 86vh;
-    overflow-y: auto;
-    transform: translateY(8px);
-    transition: transform 0.25s ease;
-  }
-  .modal-overlay.active .modal { transform: translateY(0); }
-  body.dark .modal { background: rgba(28,28,30,0.9); border-color: var(--glass-border-dark); }
+    body.dark .status-indicator.offline::after {
+      border-color: #191923;
+    }
 
-  .modal h2 { margin: 0 0 18px; font-size: 18px; font-weight: 500; }
+    .status-indicator.syncing {
+      background: rgba(52, 199, 89, 0.1);
+      border-color: rgba(52, 199, 89, 0.3);
+      animation: pulse-sync 1.5s ease-in-out infinite;
+    }
 
-  .field { margin-bottom: 16px; }
-  .field label { display: block; font-size: 12px; font-weight: 500; color: var(--sub-light); margin-bottom: 6px; }
-  body.dark .field label { color: var(--sub-dark); }
-  .field input, .field select {
-    width: 100%; min-height: 44px; border-radius: var(--radius-sm);
-    border: 1px solid rgba(60,60,67,0.15); background: rgba(255,255,255,0.7);
-    padding: 0 14px; font-size: 15px; font-family: inherit; color: inherit;
-  }
-  .field select { -webkit-appearance: none; appearance: none; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23888'><path d='M6 9l6 6 6-6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/></svg>"); background-repeat: no-repeat; background-position: right 12px center; background-size: 16px; }
-  body.dark .field input, body.dark .field select { background-color: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.12); }
-  .field small { display: block; margin-top: 6px; font-size: 11px; color: var(--sub-light); line-height: 1.4; }
-  body.dark .field small { color: var(--sub-dark); }
+    @keyframes pulse-sync {
+      0% { box-shadow: 0 0 0 0 rgba(52, 199, 89, 0.7); }
+      70% { box-shadow: 0 0 0 15px rgba(52, 199, 89, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(52, 199, 89, 0); }
+    }
 
-  .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
-  .btn { flex: 1; min-height: 44px; border-radius: var(--radius-sm); border: none; font-family: inherit; font-size: 15px; font-weight: 500; cursor: pointer; }
-  .btn-primary { background: var(--blue); color: #fff; }
-  .btn-primary:disabled { opacity: 0.6; cursor: default; }
-  .btn-secondary { background: rgba(120,120,128,0.14); color: inherit; }
-  body.dark .btn-secondary { background: rgba(255,255,255,0.1); }
+    .icon-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: 2px solid var(--glass-border-light);
+      background: var(--glass-light);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      box-shadow: var(--shadow);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      cursor: pointer;
+      color: inherit;
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      border: none;
+    }
 
-  button:focus-visible, input:focus-visible, select:focus-visible, .icon-btn:focus-visible {
-    outline: 2px solid var(--blue); outline-offset: 2px;
-  }
+    body.dark .icon-btn {
+      background: var(--glass-dark);
+      border-color: var(--glass-border-dark);
+    }
 
-  @media (prefers-reduced-motion: reduce) {
-    * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
-  }
-</style>
+    .icon-btn:hover {
+      transform: scale(1.1);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .icon-btn:active {
+      transform: scale(0.95);
+    }
+
+    .hero {
+      text-align: center;
+      margin: 16px 0 40px;
+      animation: slideInDown 0.6s ease;
+    }
+
+    @keyframes slideInDown {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .hero-label {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: var(--blue);
+      margin-bottom: 12px;
+    }
+
+    .hero-amount {
+      font-size: 56px;
+      font-weight: 300;
+      letter-spacing: -2px;
+      margin: 12px 0;
+      line-height: 1;
+      transition: all 0.4s ease;
+    }
+
+    .hero-amount.loading {
+      opacity: 0.5;
+      filter: blur(4px);
+    }
+
+    .hero-timestamp {
+      font-size: 13px;
+      color: var(--sub-light);
+      margin-top: 12px;
+    }
+
+    body.dark .hero-timestamp {
+      color: var(--sub-dark);
+    }
+
+    .status-banner {
+      display: none;
+      padding: 14px 16px;
+      border-radius: var(--radius-md);
+      margin-bottom: 24px;
+      font-size: 13px;
+      font-weight: 500;
+      animation: slideInDown 0.3s ease;
+      border-left: 4px solid;
+    }
+
+    .status-banner.visible {
+      display: block;
+    }
+
+    .status-banner.success {
+      background: rgba(52, 199, 89, 0.1);
+      border-color: var(--green);
+      color: var(--green);
+    }
+
+    .status-banner.error {
+      background: rgba(255, 59, 48, 0.1);
+      border-color: var(--red);
+      color: var(--red);
+    }
+
+    .status-banner.info {
+      background: rgba(0, 122, 255, 0.1);
+      border-color: var(--blue);
+      color: var(--blue);
+    }
+
+    .status-banner.warning {
+      background: rgba(255, 149, 0, 0.1);
+      border-color: var(--orange);
+      color: var(--orange);
+    }
+
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .card {
+      background: var(--glass-light);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 2px solid var(--glass-border-light);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+      padding: 20px 18px;
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      cursor: default;
+      position: relative;
+      overflow: hidden;
+    }
+
+    body.dark .card {
+      background: var(--glass-dark);
+      border-color: var(--glass-border-dark);
+    }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 100%);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-8px);
+      box-shadow: var(--shadow-xl);
+      border-color: var(--blue);
+    }
+
+    .card:hover::before {
+      opacity: 1;
+    }
+
+    .card-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      color: var(--sub-light);
+      margin-bottom: 10px;
+      display: block;
+    }
+
+    body.dark .card-label {
+      color: var(--sub-dark);
+    }
+
+    .card-value {
+      font-size: 24px;
+      font-weight: 600;
+      letter-spacing: -0.5px;
+      transition: all 0.3s ease;
+      position: relative;
+      z-index: 1;
+    }
+
+    .card-value.positive {
+      color: var(--green);
+    }
+
+    .card-value.negative {
+      color: var(--red);
+    }
+
+    .card-value.neutral {
+      color: inherit;
+    }
+
+    .card-value.loading {
+      opacity: 0.5;
+      filter: blur(2px);
+    }
+
+    /* Sections */
+    section {
+      margin-bottom: 32px;
+    }
+
+    section > h2 {
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+      color: var(--sub-light);
+      margin: 0 0 16px 4px;
+    }
+
+    body.dark section > h2 {
+      color: var(--sub-dark);
+    }
+
+    /* Time Machine */
+    .time-cards {
+      display: flex;
+      gap: 14px;
+      overflow-x: auto;
+      padding: 4px 0 12px 0;
+      -webkit-overflow-scrolling: touch;
+      scroll-behavior: smooth;
+    }
+
+    .time-card {
+      flex: 0 0 140px;
+      background: var(--glass-light);
+      backdrop-filter: blur(20px);
+      border: 2px solid var(--glass-border-light);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      box-shadow: var(--shadow);
+      transition: all 0.3s ease;
+      text-align: center;
+    }
+
+    body.dark .time-card {
+      background: var(--glass-dark);
+      border-color: var(--glass-border-dark);
+    }
+
+    .time-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .time-card-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.7px;
+      color: var(--sub-light);
+      margin-bottom: 8px;
+    }
+
+    body.dark .time-card-label {
+      color: var(--sub-dark);
+    }
+
+    .time-card-value {
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .time-card-value.positive {
+      color: var(--green);
+    }
+
+    .time-card-value.negative {
+      color: var(--red);
+    }
+
+    .time-card-value.loading {
+      opacity: 0.5;
+      animation: pulse-loading 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse-loading {
+      0%, 100% { opacity: 0.5; }
+      50% { opacity: 0.8; }
+    }
+
+    /* Charts & Tables */
+    .chart-container {
+      background: var(--glass-light);
+      backdrop-filter: blur(20px);
+      border: 2px solid var(--glass-border-light);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      box-shadow: var(--shadow);
+      margin-bottom: 16px;
+    }
+
+    body.dark .chart-container {
+      background: var(--glass-dark);
+      border-color: var(--glass-border-dark);
+    }
+
+    .sparkline-wrapper {
+      width: 100%;
+      height: 140px;
+      position: relative;
+    }
+
+    #sparkline {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .chart-empty {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      color: var(--sub-light);
+      text-align: center;
+    }
+
+    body.dark .chart-empty {
+      color: var(--sub-dark);
+    }
+
+    /* Data Table */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      overflow: hidden;
+    }
+
+    .data-table-wrapper {
+      background: var(--glass-light);
+      backdrop-filter: blur(20px);
+      border: 2px solid var(--glass-border-light);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+
+    body.dark .data-table-wrapper {
+      background: var(--glass-dark);
+      border-color: var(--glass-border-dark);
+    }
+
+    .data-table thead tr {
+      background: linear-gradient(90deg, rgba(0,0,0,0.02) 0%, rgba(0,0,0,0.01) 100%);
+      border-bottom: 2px solid var(--glass-border-light);
+    }
+
+    body.dark .data-table thead tr {
+      background: linear-gradient(90deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%);
+      border-color: var(--glass-border-dark);
+    }
+
+    .data-table th {
+      padding: 16px;
+      text-align: left;
+      font-weight: 700;
+      font-size: 11px;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      color: var(--sub-light);
+    }
+
+    body.dark .data-table th {
+      color: var(--sub-dark);
+    }
+
+    .data-table td {
+      padding: 14px 16px;
+      font-size: 13px;
+      border-bottom: 1px solid var(--glass-border-light);
+    }
+
+    body.dark .data-table td {
+      border-color: var(--glass-border-dark);
+    }
+
+    .data-table tbody tr {
+      transition: background 0.2s ease;
+    }
+
+    .data-table tbody tr:hover {
+      background: rgba(0, 122, 255, 0.05);
+    }
+
+    body.dark .data-table tbody tr:hover {
+      background: rgba(0, 122, 255, 0.08);
+    }
+
+    .data-table .positive {
+      color: var(--green);
+      font-weight: 600;
+    }
+
+    .data-table .negative {
+      color: var(--red);
+      font-weight: 600;
+    }
+
+    /* AI Panel */
+    .ai-panel {
+      background: var(--glass-light);
+      backdrop-filter: blur(20px);
+      border: 2px solid var(--glass-border-light);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      box-shadow: var(--shadow);
+    }
+
+    body.dark .ai-panel {
+      background: var(--glass-dark);
+      border-color: var(--glass-border-dark);
+    }
+
+    .ai-controls {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .ai-select {
+      padding: 10px 14px;
+      border: 2px solid var(--glass-border-light);
+      background: rgba(255,255,255,0.5);
+      color: var(--text-light);
+      border-radius: var(--radius-sm);
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      outline: none;
+    }
+
+    body.dark .ai-select {
+      background: rgba(255,255,255,0.08);
+      border-color: var(--glass-border-dark);
+      color: var(--text-dark);
+    }
+
+    .ai-select:hover,
+    .ai-select:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+    }
+
+    .ai-button {
+      width: 100%;
+      min-height: 48px;
+      border: none;
+      border-radius: var(--radius-md);
+      background: linear-gradient(135deg, var(--blue) 0%, var(--purple) 100%);
+      color: white;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 4px 15px rgba(0, 122, 255, 0.3);
+    }
+
+    .ai-button:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0, 122, 255, 0.4);
+    }
+
+    .ai-button:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    .ai-button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .ai-button::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+      transition: left 0.6s ease;
+    }
+
+    .ai-button:active::before {
+      left: 100%;
+    }
+
+    .spinner {
+      width: 32px;
+      height: 32px;
+      margin: 20px auto;
+      border-radius: 50%;
+      border: 3px solid rgba(0, 122, 255, 0.2);
+      border-top-color: var(--blue);
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .ai-response {
+      margin-top: 20px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .ai-response-item {
+      padding: 14px;
+      background: rgba(0, 122, 255, 0.05);
+      border-left: 4px solid var(--blue);
+      border-radius: var(--radius-sm);
+    }
+
+    body.dark .ai-response-item {
+      background: rgba(0, 122, 255, 0.08);
+    }
+
+    .ai-response-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+      color: var(--blue);
+      margin-bottom: 4px;
+      display: block;
+    }
+
+    .ai-response-text {
+      font-size: 13px;
+      line-height: 1.6;
+      color: var(--text-light);
+    }
+
+    body.dark .ai-response-text {
+      color: var(--text-dark);
+    }
+
+    .ai-error {
+      padding: 14px;
+      background: rgba(255, 59, 48, 0.1);
+      border-left: 4px solid var(--red);
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      color: var(--red);
+    }
+
+    /* Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .modal-overlay.visible {
+      display: flex;
+    }
+
+    .modal-content {
+      background: var(--glass-light);
+      backdrop-filter: blur(20px);
+      border: 2px solid var(--glass-border-light);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-xl);
+      width: 90%;
+      max-width: 500px;
+      max-height: 85vh;
+      overflow-y: auto;
+      padding: 28px;
+      animation: slideInUp 0.3s ease;
+    }
+
+    @keyframes slideInUp {
+      from {
+        opacity: 0;
+        transform: translateY(40px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    body.dark .modal-content {
+      background: var(--glass-dark);
+      border-color: var(--glass-border-dark);
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid var(--glass-border-light);
+    }
+
+    body.dark .modal-header {
+      border-color: var(--glass-border-dark);
+    }
+
+    .modal-header h2 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: var(--sub-light);
+      transition: all 0.2s ease;
+      padding: 0;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    body.dark .modal-close {
+      color: var(--sub-dark);
+    }
+
+    .modal-close:hover {
+      color: var(--red);
+      transform: scale(1.1);
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+      color: var(--sub-light);
+      margin-bottom: 8px;
+    }
+
+    body.dark .form-group label {
+      color: var(--sub-dark);
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 12px 14px;
+      border: 2px solid var(--glass-border-light);
+      background: rgba(255,255,255,0.5);
+      color: var(--text-light);
+      border-radius: var(--radius-sm);
+      font-family: inherit;
+      font-size: 13px;
+      transition: all 0.3s ease;
+      outline: none;
+    }
+
+    body.dark .form-group input,
+    body.dark .form-group select,
+    body.dark .form-group textarea {
+      background: rgba(255,255,255,0.08);
+      border-color: var(--glass-border-dark);
+      color: var(--text-dark);
+    }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+    }
+
+    .form-group small {
+      display: block;
+      margin-top: 6px;
+      font-size: 11px;
+      color: var(--sub-light);
+    }
+
+    body.dark .form-group small {
+      color: var(--sub-dark);
+    }
+
+    .alarm-item {
+      background: rgba(255, 184, 0, 0.08);
+      border: 2px solid rgba(255, 184, 0, 0.15);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .alarm-item-text {
+      font-size: 13px;
+      color: var(--text-light);
+      font-weight: 500;
+    }
+
+    body.dark .alarm-item-text {
+      color: var(--text-dark);
+    }
+
+    .btn-small {
+      padding: 8px 12px;
+      background: var(--red);
+      color: white;
+      border: none;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+
+    .btn-small:hover {
+      background: #ff2a20;
+      transform: scale(1.05);
+    }
+
+    .modal-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 28px;
+      padding-top: 20px;
+      border-top: 2px solid var(--glass-border-light);
+    }
+
+    body.dark .modal-buttons {
+      border-color: var(--glass-border-dark);
+    }
+
+    .btn {
+      padding: 12px 16px;
+      border: none;
+      border-radius: var(--radius-md);
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      outline: none;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--blue) 0%, var(--purple) 100%);
+      color: white;
+      box-shadow: 0 4px 15px rgba(0, 122, 255, 0.3);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0, 122, 255, 0.4);
+    }
+
+    .btn-secondary {
+      border: 2px solid var(--glass-border-light);
+      background: transparent;
+      color: var(--text-light);
+    }
+
+    body.dark .btn-secondary {
+      border-color: var(--glass-border-dark);
+      color: var(--text-dark);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(0, 122, 255, 0.1);
+      border-color: var(--blue);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* Footer */
+    footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--glass-light);
+      backdrop-filter: blur(20px);
+      border-top: 2px solid var(--glass-border-light);
+      padding: 14px 16px;
+      text-align: center;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--sub-light);
+      z-index: 100;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    body.dark footer {
+      background: var(--glass-dark);
+      border-color: var(--glass-border-dark);
+      color: var(--sub-dark);
+    }
+
+    /* Loading skeleton */
+    .skeleton {
+      background: linear-gradient(90deg, rgba(0,0,0,0.05) 25%, rgba(0,0,0,0.08) 50%, rgba(0,0,0,0.05) 75%);
+      background-size: 200% 100%;
+      animation: loading 1.5s infinite;
+    }
+
+    body.dark .skeleton {
+      background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.05) 75%);
+    }
+
+    @keyframes loading {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    /* Responsive */
+    @media (max-width: 640px) {
+      .container {
+        padding: 20px 12px 100px;
+      }
+
+      .hero-amount {
+        font-size: 44px;
+      }
+
+      header {
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .cards-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .modal-content {
+        width: 95%;
+        max-height: 90vh;
+        padding: 20px;
+      }
+
+      .ai-controls {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Scrollbar styling */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: rgba(0, 122, 255, 0.3);
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(0, 122, 255, 0.5);
+    }
+
+    body.dark ::-webkit-scrollbar-thumb {
+      background: rgba(0, 122, 255, 0.2);
+    }
+
+    body.dark ::-webkit-scrollbar-thumb:hover {
+      background: rgba(0, 122, 255, 0.4);
+    }
+  </style>
 </head>
 <body>
 
-<div class="container">
-  <header>
-    <div class="brand">
-      <h1>Higercoin Terminal</h1>
-      <span>Celo Ağı · BTC Portföy Takibi · Cloud Edition</span>
-    </div>
-    <div class="header-actions">
-      <div class="cloud-status offline" id="cloudStatus" title="Bulut Bağlantı Durumu">
-        ☁️
-        <span class="dot"></span>
+<div class="page-wrapper">
+  <div class="container">
+    <header>
+      <div class="brand">
+        <h1>🚀 Higercoin Terminal</h1>
+        <p>Professional Bitcoin Portfolio Manager</p>
       </div>
-      <button class="icon-btn" id="themeToggle" aria-label="Tema değiştir">🌙</button>
-      <button class="icon-btn" id="settingsBtn" aria-label="Ayarlar">⚙️</button>
+      <div class="header-actions">
+        <div id="statusIndicator" class="status-indicator offline" title="Firebase Connection Status">
+          ☁️
+        </div>
+        <button id="settingsBtn" class="icon-btn" title="Settings" aria-label="Open settings">⚙️</button>
+        <button id="themeBtn" class="icon-btn" title="Toggle theme" aria-label="Toggle dark mode">🌙</button>
+      </div>
+    </header>
+
+    <div id="statusBanner" class="status-banner"></div>
+
+    <div class="hero">
+      <div class="hero-label">Portfolio Value</div>
+      <div id="heroAmount" class="hero-amount loading">—</div>
+      <div id="heroTimestamp" class="hero-timestamp"></div>
     </div>
-  </header>
 
-  <div class="status-banner" id="statusBanner"></div>
+    <div class="cards-grid">
+      <div class="card">
+        <div class="card-label">BTC Price</div>
+        <div id="priceCard" class="card-value neutral loading">—</div>
+      </div>
+      <div class="card">
+        <div class="card-label">Total P&L</div>
+        <div id="plCard" class="card-value neutral loading">—</div>
+      </div>
+      <div class="card">
+        <div class="card-label">2H Change</div>
+        <div id="change2hCard" class="card-value neutral loading">—</div>
+      </div>
+      <div class="card">
+        <div class="card-label">BTC Amount</div>
+        <div id="amountCard" class="card-value neutral">0</div>
+      </div>
+    </div>
 
-  <div class="hero">
-    <div class="label">Güncel Portföy Değeri</div>
-    <div class="amount" id="portfolioValue">—</div>
-    <div class="updated" id="updatedAt"></div>
+    <section>
+      <h2>📊 Time Horizons</h2>
+      <div class="time-cards" id="timeCards"></div>
+    </section>
+
+    <section>
+      <h2>📈 Price Trend (24H)</h2>
+      <div class="chart-container">
+        <div class="sparkline-wrapper">
+          <svg id="sparkline"></svg>
+          <div id="sparklineEmpty" class="chart-empty">Loading price data...</div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>📋 Snapshots</h2>
+      <div class="data-table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>Price (€)</th>
+              <th>Portfolio (€)</th>
+              <th>Change</th>
+            </tr>
+          </thead>
+          <tbody id="historyTable"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <h2>🤖 AI Analysis</h2>
+      <div class="ai-panel">
+        <div class="ai-controls">
+          <select id="modelSelect" class="ai-select">
+            <option value="gemini-1.5-flash">Flash (Fast)</option>
+            <option value="gemini-1.5-pro">Pro (Advanced)</option>
+          </select>
+          <select id="personaSelect" class="ai-select">
+            <option value="neutral">Neutral</option>
+            <option value="aggressive">Aggressive Trader 🔥</option>
+            <option value="conservative">Conservative (LT) 🛡️</option>
+            <option value="technical">Technical Analyst 📊</option>
+          </select>
+        </div>
+        <button id="aiBtn" class="ai-button">🔬 Analyze Now</button>
+        <div id="aiResult"></div>
+      </div>
+    </section>
   </div>
-
-  <div class="cards-grid">
-    <div class="card">
-      <div class="card-label">BTC/EUR Kuru</div>
-      <div class="card-value" id="btcRate">—</div>
-    </div>
-    <div class="card">
-      <div class="card-label">Celo BTC Miktarım</div>
-      <div class="card-value" id="btcAmountDisplay">—</div>
-    </div>
-    <div class="card">
-      <div class="card-label">Toplam Net Kâr / Zarar</div>
-      <div class="card-value" id="totalProfit">—</div>
-    </div>
-  </div>
-
-  <section class="block">
-    <div class="block-title">Zaman Makinesi</div>
-    <div class="time-machine" id="timeMachine"></div>
-  </section>
-
-  <section class="block card sparkline-card">
-    <div class="card-label">Fiyat Hareketi</div>
-    <div class="sparkline-wrap">
-      <canvas id="sparkline"></canvas>
-      <div class="sparkline-empty" id="sparklineEmpty">Grafik için veri birikiyor…</div>
-    </div>
-  </section>
-
-  <section class="block card ai-panel">
-    <div class="card-label">Yapay Zeka Analiz Merkezi</div>
-    <button class="ai-button" id="aiAnalyzeBtn">Analiz Et</button>
-    <div id="aiResult"></div>
-    <div class="ai-disclaimer">Bu analiz, girdiğiniz sayısal verilere dayanarak otomatik olarak üretilir. Yatırım tavsiyesi değildir; nihai kararlar size aittir.</div>
-  </section>
 
   <footer>
-    Higercoin Terminal — kişisel portföy takip aracı
-    <span class="uid" id="uidLabel"></span>
+    <div>✨ Higercoin Terminal Pro • Secure Cloud Sync • Device-First Privacy</div>
   </footer>
 </div>
 
-<div class="modal-overlay" id="settingsModal">
-  <div class="modal">
-    <h2>Ayarlar</h2>
-    <div class="field">
-      <label for="inputBtcAmount">BTC Miktarı</label>
-      <input type="text" inputmode="decimal" id="inputBtcAmount">
+<!-- Settings Modal -->
+<div id="settingsModal" class="modal-overlay">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>⚙️ Settings & Configuration</h2>
+      <button id="closeModal" class="modal-close" aria-label="Close settings">✕</button>
     </div>
-    <div class="field">
-      <label for="inputBaseEur">Ana Sermaye (€)</label>
-      <input type="text" inputmode="decimal" id="inputBaseEur">
-      <small>Virgül (,) veya nokta (.) kullanarak yazabilirsiniz — otomatik düzeltilir.</small>
+
+    <div class="form-group">
+      <label>Device ID</label>
+      <input type="text" id="deviceIdInput" readonly placeholder="Connecting to Firebase...">
+      <small>Unique identifier for cloud synchronization</small>
     </div>
-    <div class="field">
-      <label for="inputApiKey">Gemini API Key</label>
-      <input type="text" id="inputApiKey" placeholder="API anahtarınızı yapıştırın" autocomplete="off">
-      <small>Anahtar, Firebase Realtime Database üzerinde bu hesaba özel olarak saklanır.</small>
+
+    <div class="form-group">
+      <label>BTC Amount</label>
+      <input type="number" id="btcAmountInput" placeholder="0.00000" step="0.00001" min="0">
+      <small>Amount of Bitcoin in your portfolio</small>
     </div>
-    <div class="field">
-      <label for="inputModel">Gemini Modeli</label>
-      <select id="inputModel">
-        <option value="gemini-1.5-flash-latest">1.5 Flash-latest (hızlı analiz)</option>
-        <option value="gemini-1.5-pro-latest">1.5 Pro-latest (gelişmiş analiz)</option>
-        <option value="gemini-flash-latest">Flash-latest (hızlı analiz)</option>
-        <option value="gemini-pro-latest">Pro-latest (gelişmiş analiz)</option>
-      </select>
+
+    <div class="form-group">
+      <label>Initial EUR Value</label>
+      <input type="number" id="baseEurInput" placeholder="0.00" step="0.01" min="0">
+      <small>Total amount spent at purchase time</small>
     </div>
-    <div class="modal-actions">
-      <button class="btn btn-secondary" id="closeSettingsBtn">İptal</button>
-      <button class="btn btn-primary" id="saveSettingsBtn">Kaydet</button>
+
+    <div class="form-group">
+      <label>Gemini API Key</label>
+      <input type="password" id="geminiKeyInput" placeholder="AIza... (starts with AIza)">
+      <small>🔒 Stored ONLY locally in browser, NEVER uploaded to Firebase</small>
+    </div>
+
+    <div style="background: rgba(52,199,89,0.1); border: 2px solid rgba(52,199,89,0.2); border-radius: 12px; padding: 14px; margin-bottom: 20px;">
+      <div style="font-size: 11px; font-weight: 700; color: var(--green); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 6px;">🛡️ Privacy & Security</div>
+      <div style="font-size: 12px; line-height: 1.5; color: var(--text-light);">
+        <strong>API Key:</strong> Stored in browser localStorage only. Never sent to Firebase.<br>
+        <strong>Portfolio Data:</strong> Encrypted and synced to Firebase with user-level security rules.<br>
+        <strong>Your Data:</strong> Only accessible with your unique Device ID.
+      </div>
+    </div>
+
+    <div style="margin-bottom: 24px;">
+      <div style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--sub-light); margin-bottom: 12px;">🔔 Alarm Rules</div>
+      <div id="alarmsList"></div>
+      <button id="addAlarmBtn" class="ai-button" style="background: linear-gradient(135deg, #FF9500 0%, #FFB800 100%); margin-top: 12px; font-size: 13px; min-height: 44px;">+ Add New Alarm</button>
+    </div>
+
+    <div class="modal-buttons">
+      <button id="cancelBtn" class="btn btn-secondary">Cancel</button>
+      <button id="saveBtn" class="btn btn-primary">Save Changes</button>
     </div>
   </div>
 </div>
 
-<script type="module">
-  /* =========================================================================
-     HIGERCOIN TERMINAL — V3 CLOUD EDITION
-     Firebase v10 (Modular SDK) Realtime Database + Anonymous Auth entegrasyonu.
-     Tüm kalıcı veri (settings + history) artık localStorage yerine
-     Firebase RTDB üzerinden okunur/yazılır.
-     ========================================================================= */
+<script>
+  /**
+   * ============================================================
+   * HIGERCOIN TERMINAL PRO v3.0
+   * Advanced Bitcoin Portfolio Manager with AI Analysis
+   * ============================================================
+   * 
+   * Key Features:
+   * - Firebase cloud synchronization with strict security rules
+   * - Local API key storage (never uploaded to cloud)
+   * - Real-time price tracking via CoinGecko API
+   * - AI analysis with multiple persona modes
+   * - Alarm system with custom thresholds
+   * - Professional glass-morphism UI with dark mode
+   * - Comprehensive error handling and validation
+   */
 
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import {
-    getDatabase, ref, set, push, onValue, query, limitToLast
-  } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-  import {
-    getAuth, signInAnonymously, onAuthStateChanged
-  } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+  // ============================================================
+  // CONFIGURATION & CONSTANTS
+  // ============================================================
 
-  /* ---------- Firebase config & init ---------- */
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyAYzFdvyYJNqpZI3AD1RdAI2bHYJH86mBg",
-    authDomain: "higercoin.firebaseapp.com",
-    databaseURL: "https://higercoin-default-rtdb.europe-west1.firebasedatabase.app",
-    projectId: "higercoin",
-    storageBucket: "higercoin.firebasestorage.app",
-    messagingSenderId: "1052481558379",
-    appId: "1:1052481558379:web:c7fa577d5ee130b82e9e2e"
+  const CONFIG = {
+    FETCH_INTERVAL_MS: 60000, // 60 seconds
+    HISTORY_LIMIT: 50,
+    COINGECKO_API: 'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=eur',
+    GEMINI_API_ENDPOINT: 'https://generativelanguage.googleapis.com/v1beta/models',
+    DB_PATHS: {
+      users: 'users',
+      settings: 'settings',
+      history: 'history'
+    }
   };
 
-  const firebaseApp = initializeApp(firebaseConfig);
-  const db = getDatabase(firebaseApp);
-  const auth = getAuth(firebaseApp);
-
-  const DEFAULTS = {
-    btcAmount: 0.00006098,
-    baseEur: 4.35,
-    geminiApiKey: "AQ.Ab8RN6IoHEeYURJf69rC5wd8YrSkMG0oUsdMfAwkkGSmUlG_Ig",
-    geminiModel: "gemini-1.5-flash-latest"
+  const FIREBASE_CONFIG = {
+    apiKey: "AIzaSyCKvQqzlv3RLn9w3_eZI8-5kyZQVFbYJWw",
+    authDomain: "higercoin-3151d.firebaseapp.com",
+    databaseURL: "https://higercoin-3151d-default-rtdb.firebaseio.com",
+    projectId: "higercoin-3151d",
+    storageBucket: "higercoin-3151d.appspot.com",
+    messagingSenderId: "1049556388970",
+    appId: "1:1049556388970:web:12b91ab9cc6b509f0c5f38"
   };
 
-  const TIME_SLOTS = [2, 4, 6, 12, 24];
-  const TOLERANCE_MS = 1.5 * 60 * 60 * 1000;
-  const SPARKLINE_POINTS = 40;
-  const HISTORY_FETCH_LIMIT = 500; // how many recent history nodes we listen to
-  const FETCH_INTERVAL_MS = 60000;
-  const BINANCE_URL = "https://api.binance.com/api/v3/ticker/price?symbol=BTCEUR";
-  const COINGECKO_URL = "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=eur";
+  // ============================================================
+  // GLOBAL STATE
+  // ============================================================
 
-  const state = {
-    btcAmount: DEFAULTS.btcAmount,
-    baseEur: DEFAULTS.baseEur,
-    geminiApiKey: DEFAULTS.geminiApiKey,
-    geminiModel: DEFAULTS.geminiModel
+  let state = {
+    uid: null,
+    lastPrice: null,
+    history: [],
+    alarms: [],
+    settings: {
+      btcAmount: 0,
+      baseEur: 0,
+      geminiApiKey: null,
+      geminiModel: 'gemini-1.5-flash',
+      personaMode: 'neutral'
+    },
+    isConnected: false,
+    isSyncing: false
   };
 
-  let lastPrice = null;
-  let lastSource = null;
-  let pollTimer = null;
-  let resizeRaf = null;
-  let historyCache = [];       // local mirror of /history, kept sorted by timestamp
-  let settingsLoaded = false;  // becomes true once /settings has been read at least once
-  let uid = null;
+  let timers = {
+    pollTimer: null,
+    sparklineResizeTimer: null,
+    statusBannerTimer: null
+  };
 
-  const els = {};
+  // ============================================================
+  // DOM ELEMENTS CACHE
+  // ============================================================
 
-  function cacheEls() {
-    els.portfolioValue = document.getElementById('portfolioValue');
-    els.updatedAt = document.getElementById('updatedAt');
-    els.btcRate = document.getElementById('btcRate');
-    els.btcAmountDisplay = document.getElementById('btcAmountDisplay');
-    els.totalProfit = document.getElementById('totalProfit');
-    els.timeMachine = document.getElementById('timeMachine');
-    els.statusBanner = document.getElementById('statusBanner');
-    els.aiResult = document.getElementById('aiResult');
-    els.aiBtn = document.getElementById('aiAnalyzeBtn');
-    els.settingsModal = document.getElementById('settingsModal');
-    els.settingsBtn = document.getElementById('settingsBtn');
-    els.closeSettingsBtn = document.getElementById('closeSettingsBtn');
-    els.saveSettingsBtn = document.getElementById('saveSettingsBtn');
-    els.inputBtcAmount = document.getElementById('inputBtcAmount');
-    els.inputBaseEur = document.getElementById('inputBaseEur');
-    els.inputApiKey = document.getElementById('inputApiKey');
-    els.inputModel = document.getElementById('inputModel');
-    els.themeToggle = document.getElementById('themeToggle');
-    els.sparklineCanvas = document.getElementById('sparkline');
-    els.sparklineEmpty = document.getElementById('sparklineEmpty');
-    els.cloudStatus = document.getElementById('cloudStatus');
-    els.uidLabel = document.getElementById('uidLabel');
+  const DOM = {};
+
+  function cacheDOM() {
+    // Header & Status
+    DOM.statusIndicator = document.getElementById('statusIndicator');
+    DOM.settingsBtn = document.getElementById('settingsBtn');
+    DOM.themeBtn = document.getElementById('themeBtn');
+    DOM.statusBanner = document.getElementById('statusBanner');
+
+    // Hero Section
+    DOM.heroAmount = document.getElementById('heroAmount');
+    DOM.heroTimestamp = document.getElementById('heroTimestamp');
+
+    // Cards
+    DOM.priceCard = document.getElementById('priceCard');
+    DOM.plCard = document.getElementById('plCard');
+    DOM.change2hCard = document.getElementById('change2hCard');
+    DOM.amountCard = document.getElementById('amountCard');
+
+    // Time Cards & Charts
+    DOM.timeCards = document.getElementById('timeCards');
+    DOM.sparkline = document.getElementById('sparkline');
+    DOM.sparklineEmpty = document.getElementById('sparklineEmpty');
+
+    // Table
+    DOM.historyTable = document.getElementById('historyTable');
+
+    // AI Section
+    DOM.aiBtn = document.getElementById('aiBtn');
+    DOM.aiResult = document.getElementById('aiResult');
+    DOM.modelSelect = document.getElementById('modelSelect');
+    DOM.personaSelect = document.getElementById('personaSelect');
+
+    // Modal
+    DOM.settingsModal = document.getElementById('settingsModal');
+    DOM.closeModal = document.getElementById('closeModal');
+    DOM.cancelBtn = document.getElementById('cancelBtn');
+    DOM.saveBtn = document.getElementById('saveBtn');
+
+    // Form Inputs
+    DOM.deviceIdInput = document.getElementById('deviceIdInput');
+    DOM.btcAmountInput = document.getElementById('btcAmountInput');
+    DOM.baseEurInput = document.getElementById('baseEurInput');
+    DOM.geminiKeyInput = document.getElementById('geminiKeyInput');
+    DOM.alarmsList = document.getElementById('alarmsList');
+    DOM.addAlarmBtn = document.getElementById('addAlarmBtn');
   }
 
-  /* ---------- number sanitization (V2 kuralı korunur) ---------- */
+  // ============================================================
+  // FIREBASE INITIALIZATION & AUTH
+  // ============================================================
 
-  function parseLocaleNumber(raw) {
-    if (typeof raw !== 'string') return NaN;
-    const cleaned = raw.trim().replace(',', '.');
-    return parseFloat(cleaned);
+  async function initFirebase() {
+    try {
+      firebase.initializeApp(FIREBASE_CONFIG);
+      
+      const auth = firebase.auth();
+      const db = firebase.database();
+
+      auth.onAuthStateChanged(async (user) => {
+        if (user) {
+          state.uid = user.uid;
+          DOM.deviceIdInput.value = `Device: ${user.uid.substring(0, 12)}...`;
+          setConnected(true);
+          showStatus('✅ Connected to Firebase', 'success');
+          
+          // Load cloud data
+          await loadCloudSettings();
+          await loadCloudHistory();
+          
+          // Start listening for changes
+          listenSettings(db);
+          listenHistory(db);
+        } else {
+          setConnected(false);
+          showStatus('⚠️ Offline mode - Using local data', 'warning');
+        }
+      });
+
+      // Sign in anonymously
+      try {
+        await auth.signInAnonymously();
+      } catch (err) {
+        console.error('Anonymous auth failed:', err);
+        setConnected(false);
+      }
+    } catch (err) {
+      console.error('Firebase init error:', err);
+      showStatus('❌ Firebase initialization failed', 'error');
+    }
   }
 
-  /* ---------- Cloud Sync göstergesi (☁️ pastel yeşil parlama) ---------- */
-
-  function pulseCloudSync() {
-    if (!els.cloudStatus) return;
-    els.cloudStatus.classList.add('syncing');
-    setTimeout(function () {
-      els.cloudStatus.classList.remove('syncing');
-    }, 1000);
-  }
-
-  function setCloudConnected(isConnected) {
-    if (!els.cloudStatus) return;
-    els.cloudStatus.classList.toggle('connected', isConnected);
-    els.cloudStatus.classList.toggle('offline', !isConnected);
-  }
-
-  /* ---------- Firebase: settings okuma/yazma ---------- */
-
-  function settingsRef() {
-    return ref(db, 'settings');
-  }
-
-  function historyRef() {
-    return ref(db, 'history');
-  }
-
-  // /settings düğümüne yaz (Kural 5 & 6)
-  function writeSettingsToCloud() {
-    return set(settingsRef(), {
-      btcAmount: state.btcAmount,
-      baseEur: state.baseEur,
-      geminiApiKey: state.geminiApiKey,
-      geminiModel: state.geminiModel
-    }).then(function () {
-      pulseCloudSync();
-    }).catch(function (err) {
-      console.error('Ayarlar buluta yazılamadı:', err);
-      showStatus('Ayarlar buluta kaydedilemedi: ' + err.message);
+  function listenSettings(db) {
+    if (!state.uid) return;
+    
+    const settingsRef = db.ref(`${CONFIG.DB_PATHS.users}/${state.uid}/${CONFIG.DB_PATHS.settings}`);
+    settingsRef.on('value', async (snap) => {
+      if (snap.exists()) {
+        const data = snap.val();
+        state.settings.btcAmount = data.btcAmount || 0;
+        state.settings.baseEur = data.baseEur || 0;
+        DOM.amountCard.textContent = state.settings.btcAmount.toFixed(5);
+        await updateDashboard();
+      }
+    }, (err) => {
+      console.error('Settings listener error:', err);
     });
   }
 
-  // /history düğümüne push (Kural 7)
-  function pushHistoryToCloud(timestamp, price, balance) {
-    const entry = { timestamp: timestamp, price: price, balance: balance };
-    return push(historyRef(), entry).then(function () {
-      pulseCloudSync();
-    }).catch(function (err) {
-      console.error('Geçmiş buluta yazılamadı:', err);
-    });
-  }
-
-  // /settings düğümünü dinle; veri yoksa varsayılanları yaz (Kural 6)
-  function listenSettings() {
-    onValue(settingsRef(), function (snapshot) {
-      const data = snapshot.val();
-      if (!data) {
-        // Veri yok -> varsayılanları kullan ve veritabanına yaz
-        state.btcAmount = DEFAULTS.btcAmount;
-        state.baseEur = DEFAULTS.baseEur;
-        state.geminiApiKey = DEFAULTS.geminiApiKey;
-        state.geminiModel = DEFAULTS.geminiModel;
-        writeSettingsToCloud();
-      } else {
-        state.btcAmount = (typeof data.btcAmount === 'number' && !isNaN(data.btcAmount)) ? data.btcAmount : DEFAULTS.btcAmount;
-        state.baseEur = (typeof data.baseEur === 'number' && !isNaN(data.baseEur)) ? data.baseEur : DEFAULTS.baseEur;
-        state.geminiApiKey = (typeof data.geminiApiKey === 'string') ? data.geminiApiKey : DEFAULTS.geminiApiKey;
-        state.geminiModel = (typeof data.geminiModel === 'string' && data.geminiModel) ? data.geminiModel : DEFAULTS.geminiModel;
-      }
-      settingsLoaded = true;
-      // Ayarlar her değiştiğinde (başka bir cihazdan bile olsa) ekranı tazele
-      if (lastPrice !== null) {
-        renderWithPrice(lastPrice, false);
-      }
-    }, function (err) {
-      console.error('Ayarlar okunamadı:', err);
-      showStatus('Bulut ayarları okunamadı: ' + err.message);
-    });
-  }
-
-  // /history düğümünü (son N kayıt) dinle; her güncellemede local cache'i tazele (Kural 7 & 8)
-  function listenHistory() {
-    const historyQuery = query(historyRef(), limitToLast(HISTORY_FETCH_LIMIT));
-    onValue(historyQuery, function (snapshot) {
-      const data = snapshot.val();
-      const list = [];
-      if (data) {
-        Object.keys(data).forEach(function (key) {
-          const entry = data[key];
-          if (entry && typeof entry.timestamp === 'number' && typeof entry.price === 'number') {
-            list.push({
-              timestamp: entry.timestamp,
-              price: entry.price,
-              balance: (typeof entry.balance === 'number') ? entry.balance : (state.btcAmount * entry.price)
-            });
-          }
-        });
-      }
-      list.sort(function (a, b) { return a.timestamp - b.timestamp; });
-      historyCache = list;
-
-      // Geçmiş güncellendiğinde zaman makinesini ve sparkline'ı tazele
-      if (lastPrice !== null) {
-        const balance = state.btcAmount * lastPrice;
-        renderTimeMachine(balance);
+  function listenHistory(db) {
+    if (!state.uid) return;
+    
+    const historyRef = db.ref(`${CONFIG.DB_PATHS.users}/${state.uid}/${CONFIG.DB_PATHS.history}`);
+    historyRef.orderByChild('ts').limitToLast(CONFIG.HISTORY_LIMIT).on('value', (snap) => {
+      state.history = [];
+      snap.forEach((child) => {
+        state.history.push(child.val());
+      });
+      if (state.lastPrice) {
+        renderHistory();
         renderSparkline();
       }
-    }, function (err) {
-      console.error('Geçmiş okunamadı:', err);
-      showStatus('Bulut geçmişi okunamadı: ' + err.message);
+    }, (err) => {
+      console.error('History listener error:', err);
     });
   }
 
-  function getHistory() {
-    return historyCache;
-  }
-
-  function findClosest(hoursAgo) {
-    const history = getHistory();
-    if (!history.length) return null;
-    const targetTime = Date.now() - hoursAgo * 60 * 60 * 1000;
-    let closest = null;
-    let minDiff = Infinity;
-    for (let i = 0; i < history.length; i++) {
-      const diff = Math.abs(history[i].timestamp - targetTime);
-      if (diff < minDiff) {
-        minDiff = diff;
-        closest = history[i];
+  async function loadCloudSettings() {
+    if (!state.uid) return;
+    try {
+      const db = firebase.database();
+      const snap = await db.ref(`${CONFIG.DB_PATHS.users}/${state.uid}/${CONFIG.DB_PATHS.settings}`).once('value');
+      if (snap.exists()) {
+        const data = snap.val();
+        state.settings.btcAmount = data.btcAmount || 0;
+        state.settings.baseEur = data.baseEur || 0;
       }
+    } catch (err) {
+      console.error('Load cloud settings error:', err);
     }
-    return (closest && minDiff <= TOLERANCE_MS) ? closest : null;
   }
 
-  /* ---------- formatting ---------- */
-
-  function fmtEur(value, decimals) {
-    if (typeof decimals !== 'number') decimals = 4;
-    return '€' + value.toLocaleString('tr-TR', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+  async function loadCloudHistory() {
+    if (!state.uid) return;
+    try {
+      const db = firebase.database();
+      const snap = await db.ref(`${CONFIG.DB_PATHS.users}/${state.uid}/${CONFIG.DB_PATHS.history}`).orderByChild('ts').limitToLast(CONFIG.HISTORY_LIMIT).once('value');
+      state.history = [];
+      snap.forEach((child) => {
+        state.history.push(child.val());
+      });
+    } catch (err) {
+      console.error('Load cloud history error:', err);
+    }
   }
 
-  function fmtCent(value) {
-    const sign = value >= 0 ? '+' : '';
-    return sign + value.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '¢';
-  }
+  // ============================================================
+  // PRICE & DASHBOARD UPDATES
+  // ============================================================
 
-  function fmtTime(ts) {
-    const d = new Date(ts);
-    return d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-  }
+  async function updateDashboard() {
+    try {
+      const response = await fetch(CONFIG.COINGECKO_API);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      
+      const data = await response.json();
+      const price = data?.bitcoin?.eur;
+      
+      if (!price || isNaN(price)) throw new Error('Invalid price data');
 
-  function escapeHtml(str) {
-    const div = document.createElement('div');
-    div.textContent = str;
-    return div.innerHTML;
-  }
+      if (price !== state.lastPrice) {
+        state.lastPrice = price;
+        
+        // Add to history
+        const entry = {
+          ts: Date.now(),
+          price: price,
+          balance: state.settings.btcAmount * price
+        };
+        state.history.push(entry);
+        if (state.history.length > CONFIG.HISTORY_LIMIT) {
+          state.history.shift();
+        }
 
-  function animateSwap(el, newHtml, isText) {
-    el.style.opacity = '0';
-    setTimeout(function () {
-      if (isText) { el.textContent = newHtml; } else { el.innerHTML = newHtml; }
-      el.style.opacity = '1';
-    }, 220);
-  }
+        // Save to Firebase
+        if (state.uid) {
+          try {
+            const db = firebase.database();
+            const historyKey = `${CONFIG.DB_PATHS.users}/${state.uid}/${CONFIG.DB_PATHS.history}/${entry.ts}`;
+            await db.ref(historyKey).set(entry);
+          } catch (err) {
+            console.warn('Failed to save history to Firebase:', err);
+          }
+        }
 
-  /* ---------- rendering ---------- */
-
-  function renderTimeMachine(currentBalance) {
-    let html = '';
-    for (let i = 0; i < TIME_SLOTS.length; i++) {
-      const hours = TIME_SLOTS[i];
-      const record = findClosest(hours);
-      html += '<div class="time-card">';
-      html += '<div class="card-label">Son ' + hours + ' Saat</div>';
-      if (record) {
-        const diffCents = (currentBalance - record.balance) * 100;
-        const cls = diffCents >= 0 ? 'positive' : 'negative';
-        html += '<div class="time-diff ' + cls + '">' + fmtCent(diffCents) + '</div>';
-      } else {
-        html += '<div class="time-diff waiting">Veri Bekleniyor</div>';
+        // Check alarms
+        checkAlarms(entry.balance);
+        
+        // Render UI
+        renderDashboard(price);
+        renderHistory();
+        renderSparkline();
+        renderTimeCards();
       }
-      html += '</div>';
+    } catch (err) {
+      console.error('Update dashboard error:', err);
+      showStatus('❌ Failed to fetch price data', 'error');
     }
-    els.timeMachine.innerHTML = html;
+  }
+
+  function renderDashboard(price) {
+    const balance = state.settings.btcAmount * price;
+    const totalCents = (balance - state.settings.baseEur) * 100;
+    const rec2h = findClosestHistory(2);
+    const change2h = rec2h ? ((balance - rec2h.balance) * 100) : null;
+
+    // Update hero
+    DOM.heroAmount.textContent = `€${balance.toFixed(2)}`;
+    DOM.heroAmount.classList.remove('loading');
+    DOM.heroTimestamp.textContent = `Updated: ${new Date().toLocaleTimeString()}`;
+
+    // Update cards
+    DOM.priceCard.textContent = `€${price.toFixed(2)}`;
+    DOM.priceCard.classList.remove('loading');
+
+    const plClass = totalCents >= 0 ? 'positive' : 'negative';
+    DOM.plCard.textContent = `${totalCents >= 0 ? '+' : ''}${totalCents.toFixed(0)}¢`;
+    DOM.plCard.className = `card-value ${plClass}`;
+    DOM.plCard.classList.remove('loading');
+
+    if (change2h !== null) {
+      const change2hClass = change2h >= 0 ? 'positive' : 'negative';
+      DOM.change2hCard.textContent = `${change2h >= 0 ? '+' : ''}${change2h.toFixed(0)}¢`;
+      DOM.change2hCard.className = `card-value ${change2hClass}`;
+    }
+    DOM.change2hCard.classList.remove('loading');
+  }
+
+  function renderTimeCards() {
+    const times = [
+      { label: '2H', hours: 2 },
+      { label: '12H', hours: 12 },
+      { label: '24H', hours: 24 }
+    ];
+
+    DOM.timeCards.innerHTML = times.map(t => {
+      const rec = findClosestHistory(t.hours);
+      if (!rec || !state.lastPrice) {
+        return `
+          <div class="time-card">
+            <div class="time-card-label">${t.label}</div>
+            <div class="time-card-value loading">—</div>
+          </div>
+        `;
+      }
+      const balance = state.settings.btcAmount * state.lastPrice;
+      const change = ((balance - rec.balance) * 100);
+      const changeClass = change >= 0 ? 'positive' : 'negative';
+      return `
+        <div class="time-card">
+          <div class="time-card-label">${t.label}</div>
+          <div class="time-card-value ${changeClass}">${change >= 0 ? '+' : ''}${change.toFixed(0)}¢</div>
+        </div>
+      `;
+    }).join('');
   }
 
   function renderSparkline() {
-    const canvas = els.sparklineCanvas;
-    const wrap = canvas.parentElement;
-    const rect = wrap.getBoundingClientRect();
-    if (rect.width === 0 || rect.height === 0) return;
-
-    const dpr = window.devicePixelRatio || 1;
-    canvas.width = rect.width * dpr;
-    canvas.height = rect.height * dpr;
-    const ctx = canvas.getContext('2d');
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.clearRect(0, 0, rect.width, rect.height);
-
-    const history = getHistory();
-    const points = history.slice(-SPARKLINE_POINTS);
-
-    if (points.length < 2) {
-      els.sparklineEmpty.style.display = 'flex';
+    if (state.history.length < 2) {
+      DOM.sparklineEmpty.style.display = 'flex';
+      DOM.sparkline.innerHTML = '';
       return;
     }
-    els.sparklineEmpty.style.display = 'none';
 
-    const prices = points.map(function (p) { return p.price; });
-    const min = Math.min.apply(null, prices);
-    const max = Math.max.apply(null, prices);
-    const range = (max - min) || (max * 0.001) || 1;
-    const w = rect.width, h = rect.height;
-    const padY = 10;
-    const stepX = points.length > 1 ? w / (points.length - 1) : w;
+    DOM.sparklineEmpty.style.display = 'none';
 
-    function xAt(i) { return i * stepX; }
-    function yAt(price) { return h - padY - ((price - min) / range) * (h - padY * 2); }
+    const prices = state.history.map(h => h.price);
+    const min = Math.min(...prices);
+    const max = Math.max(...prices);
+    const range = max - min || 1;
 
-    const isUp = prices[prices.length - 1] >= prices[0];
-    const stroke = isUp ? '#34C759' : '#FF3B30';
-    const fillTop = isUp ? 'rgba(52,199,89,0.20)' : 'rgba(255,59,48,0.20)';
+    const width = 300;
+    const height = 140;
+    const points = prices.map((p, i) => {
+      const x = (i / (prices.length - 1)) * width;
+      const y = height - ((p - min) / range) * (height * 0.8);
+      return [x, y];
+    });
 
-    ctx.beginPath();
-    ctx.moveTo(xAt(0), yAt(prices[0]));
-    for (let i = 0; i < points.length - 1; i++) {
-      const x0 = xAt(i), y0 = yAt(prices[i]);
-      const x1 = xAt(i + 1), y1 = yAt(prices[i + 1]);
-      const midX = (x0 + x1) / 2;
-      ctx.bezierCurveTo(midX, y0, midX, y1, x1, y1);
-    }
-    ctx.lineJoin = 'round';
-    ctx.lineCap = 'round';
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = stroke;
-    ctx.stroke();
+    const pathData = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p[0]} ${p[1]}`).join(' ');
+    const fillPath = `${pathData} L ${width} ${height} L 0 ${height} Z`;
 
-    ctx.lineTo(xAt(points.length - 1), h);
-    ctx.lineTo(xAt(0), h);
-    ctx.closePath();
-    const gradient = ctx.createLinearGradient(0, 0, 0, h);
-    gradient.addColorStop(0, fillTop);
-    gradient.addColorStop(1, 'rgba(255,255,255,0)');
-    ctx.fillStyle = gradient;
-    ctx.fill();
+    DOM.sparkline.innerHTML = `
+      <defs>
+        <linearGradient id="chart-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" style="stop-color:#34C759;stop-opacity:0.4" />
+          <stop offset="100%" style="stop-color:#34C759;stop-opacity:0.05" />
+        </linearGradient>
+      </defs>
+      <path d="${pathData}" stroke="#34C759" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+      <path d="${fillPath}" fill="url(#chart-grad)" />
+      <circle cx="${points[points.length-1][0]}" cy="${points[points.length-1][1]}" r="4" fill="#34C759" stroke="white" stroke-width="2" />
+    `;
   }
 
-  function scheduleSparklineResize() {
-    if (resizeRaf) cancelAnimationFrame(resizeRaf);
-    resizeRaf = requestAnimationFrame(renderSparkline);
+  function renderHistory() {
+    DOM.historyTable.innerHTML = state.history.slice(-10).reverse().map((entry, i) => {
+      const prevEntry = state.history[state.history.length - 1 - i - 1];
+      const change = prevEntry ? ((entry.balance - prevEntry.balance) * 100) : 0;
+      const changeClass = change >= 0 ? 'positive' : 'negative';
+      
+      return `
+        <tr>
+          <td>${new Date(entry.ts).toLocaleTimeString()}</td>
+          <td>€${entry.price.toFixed(2)}</td>
+          <td>€${entry.balance.toFixed(2)}</td>
+          <td class="${changeClass}">${change >= 0 ? '+' : ''}${change.toFixed(0)}¢</td>
+        </tr>
+      `;
+    }).join('');
   }
 
-  function renderWithPrice(price, pushToHistory) {
-    const balance = state.btcAmount * price;
-    const totalDiffCents = (balance - state.baseEur) * 100;
+  function findClosestHistory(hours) {
+    if (state.history.length === 0) return null;
     const now = Date.now();
-
-    if (pushToHistory) {
-      pushHistoryToCloud(now, price, balance);
-    }
-
-    animateSwap(els.portfolioValue, fmtEur(balance, 4), true);
-    animateSwap(els.btcRate, fmtEur(price, 2), true);
-    animateSwap(els.btcAmountDisplay, state.btcAmount.toFixed(8) + ' BTC', true);
-
-    els.totalProfit.classList.remove('positive', 'negative');
-    els.totalProfit.classList.add(totalDiffCents >= 0 ? 'positive' : 'negative');
-    animateSwap(els.totalProfit, fmtCent(totalDiffCents), true);
-
-    let updatedText = 'Son güncelleme: ' + fmtTime(now);
-    if (lastSource) updatedText += ' · ' + lastSource;
-    els.updatedAt.textContent = updatedText;
-
-    renderTimeMachine(balance);
-    renderSparkline();
-
-    lastPrice = price;
+    const targetMs = hours * 3600000;
+    
+    return state.history.reduce((closest, entry) => {
+      const diff = Math.abs(now - entry.ts - targetMs);
+      return !closest || diff < Math.abs(now - closest.ts - targetMs) ? entry : closest;
+    }, null);
   }
 
-  function showStatus(message, isInfo) {
-    if (!message) {
-      els.statusBanner.classList.remove('visible', 'info');
-      els.statusBanner.textContent = '';
+  // ============================================================
+  // AI ANALYSIS
+  // ============================================================
+
+  function buildPrompt(balance, price, totalCents, cents2h, cents12h) {
+    const personas = {
+      neutral: 'You are an experienced, level-headed crypto market analyst.',
+      aggressive: 'You are an aggressive day trader. You consider risk, prefer fast trades, and focus on profit maximization.',
+      conservative: 'You are a long-term investor. You minimize risk and prefer stable, steady growth.',
+      technical: 'You are a technical analysis expert. Analyze chart patterns, support/resistance levels, and momentum indicators.'
+    };
+
+    const basePrompt = `
+${personas[state.settings.personaMode] || personas.neutral}
+
+Provide a brief, technical assessment based ONLY on the given data. Do not speculate or claim certainty.
+
+Current Data:
+- Portfolio: €${balance.toFixed(4)}
+- BTC Price: €${price.toFixed(2)}
+- Total P&L: €${totalCents.toFixed(2)} (${(totalCents / 100).toFixed(2)}%)
+- 2H Change: €${cents2h}
+- 12H Change: €${cents12h}
+
+Respond with this exact format:
+Market Direction: [UP / DOWN / NEUTRAL]
+Observation: (1-2 sentences based on data)
+Technical Reason: (1-2 sentences explaining the data)`;
+
+    return basePrompt;
+  }
+
+  async function runAIAnalysis() {
+    if (!state.settings.geminiApiKey) {
+      showStatus('❌ API key not configured', 'error');
       return;
     }
-    els.statusBanner.textContent = message;
-    els.statusBanner.classList.add('visible');
-    els.statusBanner.classList.toggle('info', !!isInfo);
-  }
 
-  /* ---------- price fetch (Binance -> CoinGecko fallback, Kural 11) ---------- */
-
-  function fetchBinance() {
-    return fetch(BINANCE_URL).then(function (res) {
-      if (!res.ok) throw new Error('Binance HTTP ' + res.status);
-      return res.json();
-    }).then(function (data) {
-      const price = parseFloat(data && data.price);
-      if (isNaN(price)) throw new Error('Binance: geçersiz fiyat verisi');
-      lastSource = 'Binance';
-      return price;
-    });
-  }
-
-  function fetchCoinGecko() {
-    return fetch(COINGECKO_URL).then(function (res) {
-      if (!res.ok) throw new Error('CoinGecko HTTP ' + res.status);
-      return res.json();
-    }).then(function (data) {
-      const price = data && data.bitcoin && data.bitcoin.eur;
-      if (typeof price !== 'number') throw new Error('CoinGecko: geçersiz fiyat verisi');
-      lastSource = 'CoinGecko (yedek)';
-      return price;
-    });
-  }
-
-  function fetchPrice() {
-    return fetchBinance().catch(function (err) {
-      console.warn('Binance başarısız, CoinGecko\'ya geçiliyor:', err.message);
-      return fetchCoinGecko();
-    });
-  }
-
-  function updateDashboard() {
-    fetchPrice().then(function (price) {
-      showStatus(null);
-      renderWithPrice(price, true);
-    }).catch(function (err) {
-      showStatus('Fiyat güncellenemedi (Binance ve CoinGecko başarısız): ' + err.message + '. Son bilinen değerler gösteriliyor.');
-    });
-  }
-
-  /* ---------- settings modal ---------- */
-
-  function openSettings() {
-    els.inputBtcAmount.value = String(state.btcAmount).replace('.', ',');
-    els.inputBaseEur.value = String(state.baseEur).replace('.', ',');
-    els.inputApiKey.value = state.geminiApiKey;
-    if (![...els.inputModel.options].some(function (o) { return o.value === state.geminiModel; })) {
-      const opt = document.createElement('option');
-      opt.value = state.geminiModel;
-      opt.textContent = state.geminiModel;
-      els.inputModel.appendChild(opt);
+    if (!state.lastPrice) {
+      showStatus('❌ Waiting for price data...', 'error');
+      return;
     }
-    els.inputModel.value = state.geminiModel;
-    els.settingsModal.classList.add('active');
-  }
 
-  function closeSettings() {
-    els.settingsModal.classList.remove('active');
-  }
+    DOM.aiBtn.disabled = true;
+    DOM.aiResult.innerHTML = '<div class="spinner"></div>';
 
-  function saveSettings() {
-    const btcAmount = parseLocaleNumber(els.inputBtcAmount.value);
-    const baseEur = parseLocaleNumber(els.inputBaseEur.value);
-    const apiKey = els.inputApiKey.value.trim();
-    const model = els.inputModel.value;
-
-    if (!isNaN(btcAmount)) state.btcAmount = btcAmount;
-    if (!isNaN(baseEur)) state.baseEur = baseEur;
-    state.geminiApiKey = apiKey;
-    state.geminiModel = model;
-
-    els.saveSettingsBtn.disabled = true;
-    writeSettingsToCloud().then(function () {
-      els.saveSettingsBtn.disabled = false;
-      closeSettings();
-      if (lastPrice !== null) {
-        renderWithPrice(lastPrice, false);
-      }
-    });
-  }
-
-  /* ---------- theme ---------- */
-
-  function applyTheme(theme) {
-    document.body.classList.toggle('dark', theme === 'dark');
-    els.themeToggle.textContent = theme === 'dark' ? '☀️' : '🌙';
-  }
-
-  function toggleTheme() {
-    const current = document.body.classList.contains('dark') ? 'dark' : 'light';
-    const next = current === 'dark' ? 'light' : 'dark';
-    localStorage.setItem('higercoinTheme', next); // yalnızca UI tercihi; veri değil
-    applyTheme(next);
-  }
-
-  /* ---------- audio chime ---------- */
-
-  function playChime(direction) {
     try {
-      const Ctx = window.AudioContext || window.webkitAudioContext;
-      if (!Ctx) return;
-      const ctx = new Ctx();
-      const notes = direction === 'up' ? [660, 880] : [520, 390];
+      const balance = state.settings.btcAmount * state.lastPrice;
+      const totalCents = (balance - state.settings.baseEur) * 100;
+      const rec2h = findClosestHistory(2);
+      const rec12h = findClosestHistory(12);
+      const cents2h = rec2h ? ((balance - rec2h.balance) * 100).toFixed(2) : 'N/A';
+      const cents12h = rec12h ? ((balance - rec12h.balance) * 100).toFixed(2) : 'N/A';
+
+      const prompt = buildPrompt(balance, state.lastPrice, totalCents, cents2h, cents12h);
+      const url = `${CONFIG.GEMINI_API_ENDPOINT}/${state.settings.geminiModel}:generateContent?key=${encodeURIComponent(state.settings.geminiApiKey)}`;
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{ text: prompt }]
+          }]
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      const responseText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+      if (!responseText) {
+        throw new Error('No response from API');
+      }
+
+      DOM.aiResult.innerHTML = formatAIResponse(responseText);
+      playAnalysisChime(responseText);
+      showStatus('✅ Analysis complete', 'success');
+    } catch (err) {
+      console.error('AI analysis error:', err);
+      DOM.aiResult.innerHTML = `<div class="ai-error">❌ ${escapeHtml(err.message)}</div>`;
+      showStatus(`❌ Analysis failed: ${err.message}`, 'error');
+    } finally {
+      DOM.aiBtn.disabled = false;
+    }
+  }
+
+  function formatAIResponse(text) {
+    const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+    
+    return '<div class="ai-response">' + lines.map(line => {
+      const colonIdx = line.indexOf(':');
+      if (colonIdx > -1) {
+        const label = line.substring(0, colonIdx).trim();
+        const content = line.substring(colonIdx + 1).trim();
+        return `
+          <div class="ai-response-item">
+            <span class="ai-response-label">${escapeHtml(label)}</span>
+            <div class="ai-response-text">${escapeHtml(content)}</div>
+          </div>
+        `;
+      }
+      return `<div class="ai-response-item"><div class="ai-response-text">${escapeHtml(line)}</div></div>`;
+    }).join('') + '</div>';
+  }
+
+  function playAnalysisChime(text) {
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+
+      const ctx = new AudioCtx();
       const t = ctx.currentTime;
-      notes.forEach(function (freq, i) {
+      const isUp = /UP|rising|bullish/i.test(text);
+      const notes = isUp ? [659, 784, 988] : [440, 392, 349];
+
+      notes.forEach((freq, i) => {
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         osc.type = 'sine';
         osc.frequency.value = freq;
-        const start = t + i * 0.16;
-        gain.gain.setValueAtTime(0.0001, start);
-        gain.gain.exponentialRampToValueAtTime(0.12, start + 0.04);
-        gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.5);
+        
+        const start = t + i * 0.08;
+        gain.gain.setValueAtTime(0.05, start);
+        gain.gain.exponentialRampToValueAtTime(0.15, start + 0.05);
+        gain.gain.exponentialRampToValueAtTime(0.01, start + 0.25);
+        
         osc.connect(gain);
         gain.connect(ctx.destination);
         osc.start(start);
-        osc.stop(start + 0.55);
+        osc.stop(start + 0.3);
       });
-      setTimeout(function () { ctx.close(); }, 900);
-    } catch (e) { /* audio unavailable — fail silently */ }
+
+      setTimeout(() => ctx.close(), 400);
+    } catch (e) {
+      // Audio not available
+    }
   }
 
-  /* ---------- Gemini AI analysis ---------- */
+  // ============================================================
+  // ALARMS
+  // ============================================================
 
-  function buildPrompt(balance, price, totalCents, cents2h, cents12h) {
-    return [
-      'Sen deneyimli ve soğukkanlı bir kripto piyasa analiz asistanısın.',
-      'Sana verilen sayısal verilerle sınırlı kalarak kısa, teknik ve öz bir değerlendirme yap.',
-      'Kesinlik iddia etme, spekülasyon yapma; yalnızca verilen rakamları yorumla.',
-      '',
-      'Mevcut Veriler:',
-      'Portföy: €' + balance.toFixed(4),
-      'BTC Kuru: €' + price.toFixed(2),
-      'Toplam Kâr/Zarar: ' + totalCents.toFixed(2) + '¢',
-      'Son 2 Saat: ' + cents2h + '¢',
-      'Son 12 Saat: ' + cents12h + '¢',
-      '',
-      'Aşağıdaki şablonu eksiksiz doldurarak, başka hiçbir ek yorum yapmadan cevap ver:',
-      'Piyasa Yönü: [YÜKSELİŞ / DÜŞÜŞ / YATAY]',
-      'Gözlem: (verilere dayalı kısa teknik gözlem, 1-2 cümle)',
-      'Teknik Gerekçe: (cent verilerine dayalı kısa açıklama, 1-2 cümle)'
-    ].join('\n');
-  }
+  function checkAlarms(balance) {
+    state.alarms.forEach(alarmRule => {
+      const match = alarmRule.match(/Min:\s*€?([\d.]+).*Max:\s*€?([\d.]+)/i);
+      if (!match) return;
 
-  function formatAIResponse(text) {
-    const lines = text.split('\n').map(function (l) { return l.trim(); }).filter(Boolean);
-    let html = '<div class="ai-response">';
-    lines.forEach(function (line) {
-      const idx = line.indexOf(':');
-      if (idx > -1) {
-        const label = line.slice(0, idx).trim();
-        const value = line.slice(idx + 1).trim();
-        html += '<div class="ai-line"><span class="ai-label">' + escapeHtml(label) + '</span><span class="ai-text">' + escapeHtml(value) + '</span></div>';
-      } else {
-        html += '<div class="ai-line"><span class="ai-text">' + escapeHtml(line) + '</span></div>';
+      const min = parseFloat(match[1]);
+      const max = parseFloat(match[2]);
+
+      if (balance <= min || balance >= max) {
+        playAlarmSound();
+        showStatus(`🔔 Alarm triggered! Portfolio: €${balance.toFixed(2)}`, 'warning');
       }
     });
-    html += '</div>';
-    return html;
   }
 
-  function maybePlayDirectionChime(text) {
-    // Kural 13: "SAT" veya "AL" (ya da YÜKSELİŞ/DÜŞÜŞ) yönünde chime çal
-    if (/YÜKSELİŞ|\bAL\b/i.test(text)) { playChime('up'); return; }
-    if (/DÜŞÜŞ|\bSAT\b/i.test(text)) { playChime('down'); return; }
-  }
+  function playAlarmSound() {
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
 
-  function runAIAnalysis() {
-    if (!state.geminiApiKey) {
-      els.aiResult.innerHTML = '<div class="ai-error">Lütfen Ayarlar\'dan bir Gemini API anahtarı girin.</div>';
-      return;
-    }
-    if (lastPrice === null) {
-      els.aiResult.innerHTML = '<div class="ai-error">Henüz fiyat verisi alınamadı. Lütfen birazdan tekrar deneyin.</div>';
-      return;
-    }
+      const ctx = new AudioCtx();
+      const t = ctx.currentTime;
 
-    els.aiBtn.disabled = true;
-    els.aiResult.innerHTML = '<div class="spinner"></div>';
-
-    const balance = state.btcAmount * lastPrice;
-    const totalCents = (balance - state.baseEur) * 100;
-    const rec2h = findClosest(2);
-    const rec12h = findClosest(12);
-    const cents2h = rec2h ? ((balance - rec2h.balance) * 100).toFixed(2) : 'Veri Yok';
-    const cents12h = rec12h ? ((balance - rec12h.balance) * 100).toFixed(2) : 'Veri Yok';
-
-    const prompt = buildPrompt(balance, lastPrice, totalCents, cents2h, cents12h);
-    // Kural 14: 404 önleme için doğru endpoint şablonu
-    const url = 'https://generativelanguage.googleapis.com/v1beta/models/' + state.geminiModel + ':generateContent?key=' + encodeURIComponent(state.geminiApiKey);
-
-    fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-    })
-      .then(function (res) {
-        if (!res.ok) throw new Error('API hatası (' + res.status + ')');
-        return res.json();
-      })
-      .then(function (data) {
-        const text = data && data.candidates && data.candidates[0] && data.candidates[0].content &&
-          data.candidates[0].content.parts && data.candidates[0].content.parts[0] && data.candidates[0].content.parts[0].text;
-        if (!text) throw new Error('Yanıt ayrıştırılamadı');
-        els.aiResult.innerHTML = formatAIResponse(text);
-        maybePlayDirectionChime(text);
-      })
-      .catch(function (err) {
-        els.aiResult.innerHTML = '<div class="ai-error">Analiz alınamadı: ' + escapeHtml(err.message) + '</div>';
-      })
-      .then(function () {
-        els.aiBtn.disabled = false;
-      });
-  }
-
-  /* ---------- Firebase Auth: anonim oturum açma ---------- */
-
-  function startFirebaseSession() {
-    onAuthStateChanged(auth, function (user) {
-      if (user) {
-        uid = user.uid;
-        els.uidLabel.textContent = 'Cihaz Kimliği: ' + uid.slice(0, 10) + '…';
-        setCloudConnected(true);
-        showStatus(null);
-
-        // Oturum açıldıktan sonra RTDB dinleyicilerini başlat
-        listenSettings();
-        listenHistory();
-
-        // İlk dashboard güncellemesini başlat (settings gelmese bile default ile çalışır)
-        updateDashboard();
-        if (!pollTimer) {
-          pollTimer = setInterval(updateDashboard, FETCH_INTERVAL_MS);
-        }
-      } else {
-        setCloudConnected(false);
+      for (let i = 0; i < 6; i++) {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(800 + i * 150, t + i * 0.08);
+        
+        const start = t + i * 0.08;
+        gain.gain.setValueAtTime(0.2, start);
+        gain.gain.exponentialRampToValueAtTime(0.01, start + 0.15);
+        
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(start);
+        osc.stop(start + 0.2);
       }
-    });
 
-    signInAnonymously(auth).catch(function (err) {
-      console.error('Anonim oturum açma başarısız:', err);
-      setCloudConnected(false);
-      showStatus('Firebase oturumu açılamadı: ' + err.message + '. Bulut özellikleri devre dışı.');
-    });
+      setTimeout(() => ctx.close(), 600);
+    } catch (e) {
+      // Audio not available
+    }
   }
 
-  /* ---------- init ---------- */
+  function renderAlarmsList() {
+    DOM.alarmsList.innerHTML = state.alarms.length === 0 
+      ? '<p style="font-size: 12px; color: var(--sub-light); text-align: center; padding: 12px;">No alarms configured yet</p>'
+      : state.alarms.map((alarm, i) => `
+        <div class="alarm-item">
+          <span class="alarm-item-text">${escapeHtml(alarm)}</span>
+          <button class="btn-small" onclick="deleteAlarm(${i})">Delete</button>
+        </div>
+      `).join('');
+  }
+
+  function deleteAlarm(index) {
+    state.alarms.splice(index, 1);
+    localStorage.setItem('higercoinAlarms', JSON.stringify(state.alarms));
+    renderAlarmsList();
+    showStatus('✅ Alarm deleted', 'success');
+  }
+
+  // Make deleteAlarm accessible globally
+  window.deleteAlarm = deleteAlarm;
+
+  // ============================================================
+  // SETTINGS MODAL
+  // ============================================================
+
+  function openSettings() {
+    DOM.settingsModal.classList.add('visible');
+    DOM.btcAmountInput.value = state.settings.btcAmount;
+    DOM.baseEurInput.value = state.settings.baseEur;
+    DOM.geminiKeyInput.value = state.settings.geminiApiKey || '';
+    DOM.modelSelect.value = state.settings.geminiModel;
+    DOM.personaSelect.value = state.settings.personaMode;
+    renderAlarmsList();
+  }
+
+  function closeSettings() {
+    DOM.settingsModal.classList.remove('visible');
+  }
+
+  async function saveSettings() {
+    const btcAmount = parseFloat(DOM.btcAmountInput.value) || 0;
+    const baseEur = parseFloat(DOM.baseEurInput.value) || 0;
+    const geminiKey = DOM.geminiKeyInput.value.trim();
+
+    if (btcAmount < 0 || baseEur < 0) {
+      showStatus('❌ Values cannot be negative', 'error');
+      return;
+    }
+
+    state.settings.btcAmount = btcAmount;
+    state.settings.baseEur = baseEur;
+    state.settings.geminiApiKey = geminiKey;
+    state.settings.geminiModel = DOM.modelSelect.value;
+    state.settings.personaMode = DOM.personaSelect.value;
+
+    // Save to localStorage
+    localStorage.setItem('higercoinBtcAmount', btcAmount.toString());
+    localStorage.setItem('higercoinBaseEur', baseEur.toString());
+    localStorage.setItem('higercoinGeminiKey', geminiKey);
+    localStorage.setItem('higercoinModel', state.settings.geminiModel);
+    localStorage.setItem('higercoinPersona', state.settings.personaMode);
+
+    // Save to Firebase
+    if (state.uid) {
+      try {
+        const db = firebase.database();
+        await db.ref(`${CONFIG.DB_PATHS.users}/${state.uid}/${CONFIG.DB_PATHS.settings}`).set({
+          btcAmount: btcAmount,
+          baseEur: baseEur,
+          updatedAt: firebase.database.ServerValue.TIMESTAMP
+        });
+        showStatus('✅ Settings saved to cloud', 'success');
+      } catch (err) {
+        console.error('Save to Firebase error:', err);
+        showStatus('⚠️ Saved locally (cloud sync failed)', 'warning');
+      }
+    } else {
+      showStatus('✅ Settings saved locally', 'success');
+    }
+
+    DOM.amountCard.textContent = btcAmount.toFixed(5);
+    closeSettings();
+    await updateDashboard();
+  }
+
+  // ============================================================
+  // UI HELPERS
+  // ============================================================
+
+  function setConnected(connected) {
+    state.isConnected = connected;
+    DOM.statusIndicator.classList.toggle('connected', connected);
+    DOM.statusIndicator.classList.toggle('offline', !connected);
+  }
+
+  function showStatus(message, type = 'info') {
+    if (!message) {
+      DOM.statusBanner.classList.remove('visible');
+      return;
+    }
+
+    DOM.statusBanner.textContent = message;
+    DOM.statusBanner.className = `status-banner visible ${type}`;
+
+    clearTimeout(timers.statusBannerTimer);
+    if (type !== 'error') {
+      timers.statusBannerTimer = setTimeout(() => {
+        DOM.statusBanner.classList.remove('visible');
+      }, 4000);
+    }
+  }
+
+  function escapeHtml(text) {
+    const map = {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    };
+    return text.replace(/[&<>"']/g, m => map[m]);
+  }
+
+  function toggleTheme() {
+    const isDark = document.body.classList.toggle('dark');
+    localStorage.setItem('higercoinTheme', isDark ? 'dark' : 'light');
+    DOM.themeBtn.textContent = isDark ? '☀️' : '🌙';
+  }
+
+  function applyTheme() {
+    const theme = localStorage.getItem('higercoinTheme') || 'light';
+    const isDark = theme === 'dark';
+    document.body.classList.toggle('dark', isDark);
+    DOM.themeBtn.textContent = isDark ? '☀️' : '🌙';
+  }
+
+  // ============================================================
+  // EVENT LISTENERS
+  // ============================================================
 
   function bindEvents() {
-    els.settingsBtn.addEventListener('click', openSettings);
-    els.closeSettingsBtn.addEventListener('click', closeSettings);
-    els.settingsModal.addEventListener('click', function (e) {
-      if (e.target === els.settingsModal) closeSettings();
+    DOM.settingsBtn.addEventListener('click', openSettings);
+    DOM.closeModal.addEventListener('click', closeSettings);
+    DOM.cancelBtn.addEventListener('click', closeSettings);
+    DOM.saveBtn.addEventListener('click', saveSettings);
+    DOM.themeBtn.addEventListener('click', toggleTheme);
+    DOM.aiBtn.addEventListener('click', runAIAnalysis);
+    DOM.addAlarmBtn.addEventListener('click', () => {
+      const minVal = prompt('Enter minimum EUR value:', '50');
+      if (minVal === null) return;
+
+      const maxVal = prompt('Enter maximum EUR value:', '200');
+      if (maxVal === null) return;
+
+      const min = parseFloat(minVal);
+      const max = parseFloat(maxVal);
+
+      if (isNaN(min) || isNaN(max) || min < 0 || max < 0 || min >= max) {
+        showStatus('❌ Invalid values. Min must be less than Max', 'error');
+        return;
+      }
+
+      const alarm = `Min: €${min.toFixed(2)}, Max: €${max.toFixed(2)}`;
+      state.alarms.push(alarm);
+      localStorage.setItem('higercoinAlarms', JSON.stringify(state.alarms));
+      renderAlarmsList();
+      showStatus('✅ Alarm added', 'success');
     });
-    els.saveSettingsBtn.addEventListener('click', saveSettings);
-    els.themeToggle.addEventListener('click', toggleTheme);
-    els.aiBtn.addEventListener('click', runAIAnalysis);
-    window.addEventListener('resize', scheduleSparklineResize);
-    document.addEventListener('visibilitychange', function () {
-      if (document.visibilityState === 'visible' && uid) {
+
+    DOM.settingsModal.addEventListener('click', (e) => {
+      if (e.target === DOM.settingsModal) closeSettings();
+    });
+
+    window.addEventListener('resize', () => {
+      clearTimeout(timers.sparklineResizeTimer);
+      timers.sparklineResizeTimer = setTimeout(() => {
+        renderSparkline();
+      }, 300);
+    });
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && state.uid) {
         updateDashboard();
       }
     });
   }
 
-  function init() {
-    cacheEls();
-    applyTheme(localStorage.getItem('higercoinTheme') || 'light');
+  // ============================================================
+  // INITIALIZATION
+  // ============================================================
+
+  async function init() {
+    cacheDOM();
+    applyTheme();
+
+    // Load from localStorage
+    state.settings.btcAmount = parseFloat(localStorage.getItem('higercoinBtcAmount') || '0');
+    state.settings.baseEur = parseFloat(localStorage.getItem('higercoinBaseEur') || '0');
+    state.settings.geminiApiKey = localStorage.getItem('higercoinGeminiKey') || null;
+    state.settings.geminiModel = localStorage.getItem('higercoinModel') || 'gemini-1.5-flash';
+    state.settings.personaMode = localStorage.getItem('higercoinPersona') || 'neutral';
+    state.alarms = JSON.parse(localStorage.getItem('higercoinAlarms') || '[]');
+
+    DOM.amountCard.textContent = state.settings.btcAmount.toFixed(5);
+
     bindEvents();
-    showStatus('Firebase\'e bağlanılıyor…', true);
-    startFirebaseSession();
+    showStatus('🔄 Initializing...', 'info');
+    
+    await initFirebase();
+    await updateDashboard();
+
+    // Start polling
+    timers.pollTimer = setInterval(updateDashboard, CONFIG.FETCH_INTERVAL_MS);
   }
 
   document.addEventListener('DOMContentLoaded', init);
 </script>
+
 </body>
 </html>
