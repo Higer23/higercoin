@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Higercoin Terminal — Cloud Edition</title>
+<style>
+  :root {
+    --green: #34C759;
+    --red: #FF3B30;
+    --blue: #007AFF;
+    --radius-lg: 20px;
+    --radius-md: 16px;
+    --radius-sm: 12px;
+    --shadow: 0 8px 32px rgba(0,0,0,0.05);
+    --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --glass-light: rgba(255,255,255,0.6);
+    --glass-border-light: rgba(255,255,255,0.4);
+    --glass-dark: rgba(30,30,30,0.6);
+    --glass-border-dark: rgba(255,255,255,0.08);
+    --text-light: #1c1c1e;
+    --text-dark: #f2f2f7;
+    --sub-light: rgba(60,60,67,0.6);
+    --sub-dark: rgba(235,235,245,0.6);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font);
+    color: var(--text-light);
+    min-height: 100vh;
+    background: linear-gradient(160deg, #f2f4f8 0%, #eef1f6 45%, #f6f1f5 100%);
+    transition: background 0.4s ease, color 0.4s ease;
+    padding: 24px 16px 64px;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  body.dark {
+    color: var(--text-dark);
+    background: linear-gradient(160deg, #121214 0%, #17171a 45%, #131315 100%);
+  }
+
+  body::before, body::after {
+    content: "";
+    position: fixed;
+    width: 480px; height: 480px;
+    border-radius: 50%;
+    filter: blur(90px);
+    z-index: 0;
+    opacity: 0.35;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+  }
+  body::before { top: -180px; left: -160px; background: #d9f2e2; }
+  body::after { bottom: -200px; right: -160px; background: #e6ddf5; }
+  body.dark::before { background: #123522; opacity: 0.4; }
+  body.dark::after { background: #241d38; opacity: 0.4; }
+
+  .container { max-width: 640px; margin: 0 auto; position: relative; z-index: 1; }
+
+  header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; }
+
+  .brand h1 { margin: 0; font-size: 22px; font-weight: 500; letter-spacing: -0.2px; }
+  .brand span { display: block; font-size: 12px; font-weight: 400; color: var(--sub-light); margin-top: 2px; }
+  body.dark .brand span { color: var(--sub-dark); }
+
+  .header-actions { display: flex; align-items: center; gap: 10px; }
+
+  .cloud-status {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    border: 1px solid var(--glass-border-light);
+    background: var(--glass-light);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    box-shadow: var(--shadow);
+    transition: box-shadow 0.3s ease, background 0.3s ease, filter 0.3s ease;
+    position: relative;
+  }
+  body.dark .cloud-status { background: var(--glass-dark); border-color: var(--glass-border-dark); }
+  .cloud-status.offline { filter: grayscale(1) opacity(0.55); }
+  .cloud-status.syncing {
+    background: rgba(52,199,89,0.28);
+    box-shadow: 0 0 0 4px rgba(52,199,89,0.18), 0 8px 20px rgba(52,199,89,0.25);
+  }
+  .cloud-status .dot {
+    position: absolute; bottom: -1px; right: -1px;
+    width: 9px; height: 9px; border-radius: 50%;
+    background: var(--sub-light); border: 2px solid #f2f4f8;
+    transition: background 0.3s ease;
+  }
+  body.dark .cloud-status .dot { border-color: #121214; }
+  .cloud-status.connected .dot { background: var(--green); }
+  .cloud-status.offline .dot { background: var(--red); }
+
+  .icon-btn {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    border: 1px solid var(--glass-border-light);
+    background: var(--glass-light);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    box-shadow: var(--shadow);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    cursor: pointer;
+    color: inherit;
+  }
+  body.dark .icon-btn { background: var(--glass-dark); border-color: var(--glass-border-dark); }
+  .icon-btn:active { transform: scale(0.94); }
+
+  .hero { text-align: center; margin: 8px 0 28px; }
+  .hero .label { font-size: 12px; font-weight: 500; letter-spacing: 0.6px; text-transform: uppercase; color: var(--sub-light); }
+  body.dark .hero .label { color: var(--sub-dark); }
+  .hero .amount { font-size: 48px; font-weight: 200; letter-spacing: -1px; margin-top: 6px; transition: opacity 0.5s ease; }
+  .hero .updated { margin-top: 8px; font-size: 12px; color: var(--sub-light); min-height: 16px; }
+  body.dark .hero .updated { color: var(--sub-dark); }
+
+  .status-banner {
+    display: none; text-align: center; font-size: 13px; color: var(--red);
+    background: rgba(255,59,48,0.08); border: 1px solid rgba(255,59,48,0.18);
+    border-radius: var(--radius-sm); padding: 10px 14px; margin-bottom: 20px;
+  }
+  .status-banner.visible { display: block; }
+  .status-banner.info {
+    color: var(--blue);
+    background: rgba(0,122,255,0.08); border-color: rgba(0,122,255,0.18);
+  }
+
+  .cards-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
+  @media (max-width: 560px) { .cards-grid { grid-template-columns: 1fr; } }
+
+  .card {
+    background: var(--glass-light);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border-light);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
+    padding: 18px;
+  }
+  body.dark .card { background: var(--glass-dark); border-color: var(--glass-border-dark); }
+
+  .card .card-label { font-size: 11px; font-weight: 500; letter-spacing: 0.5px; text-transform: uppercase; color: var(--sub-light); margin-bottom: 8px; }
+  body.dark .card .card-label { color: var(--sub-dark); }
+  .card .card-value { font-size: 21px; font-weight: 400; letter-spacing: -0.3px; transition: opacity 0.5s ease; }
+  .card .card-value.positive { color: var(--green); }
+  .card .card-value.negative { color: var(--red); }
+
+  section.block { margin-bottom: 24px; }
+  .block-title { font-size: 14px; font-weight: 500; color: var(--sub-light); margin: 0 0 12px 4px; }
+  body.dark .block-title { color: var(--sub-dark); }
+
+  .time-machine { display: flex; gap: 12px; overflow-x: auto; padding: 2px 2px 10px; -webkit-overflow-scrolling: touch; scrollbar-width: thin; }
+  .time-card {
+    min-width: 128px; flex: 0 0 auto;
+    background: var(--glass-light);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border-light);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow);
+    padding: 14px;
+  }
+  body.dark .time-card { background: var(--glass-dark); border-color: var(--glass-border-dark); }
+  .time-card .card-label { font-size: 10.5px; }
+  .time-card .time-diff { font-size: 17px; font-weight: 400; }
+  .time-card .time-diff.positive { color: var(--green); }
+  .time-card .time-diff.negative { color: var(--red); }
+  .time-card .time-diff.waiting { font-size: 13px; font-weight: 400; color: var(--sub-light); }
+  body.dark .time-card .time-diff.waiting { color: var(--sub-dark); }
+
+  .sparkline-card { padding: 18px 14px 10px; }
+  .sparkline-wrap { width: 100%; height: 110px; position: relative; }
+  #sparkline { width: 100%; height: 100%; display: block; }
+  .sparkline-empty {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    font-size: 12.5px; color: var(--sub-light); text-align: center; padding: 0 20px;
+  }
+  body.dark .sparkline-empty { color: var(--sub-dark); }
+
+  .ai-panel { padding: 20px; }
+  .ai-button {
+    width: 100%; min-height: 48px; border: none; border-radius: var(--radius-md);
+    background: linear-gradient(135deg, #6fb7ff, #8f8bf0);
+    color: #fff; font-family: inherit; font-size: 15px; font-weight: 500; letter-spacing: -0.1px;
+    cursor: pointer; margin-top: 4px;
+  }
+  .ai-button:active { transform: scale(0.99); }
+  .ai-button:disabled { opacity: 0.6; cursor: default; }
+
+  .spinner {
+    width: 26px; height: 26px; margin: 18px auto 4px; border-radius: 50%;
+    border: 2px solid rgba(120,120,128,0.2); border-top-color: var(--blue);
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .ai-response { margin-top: 16px; display: flex; flex-direction: column; gap: 10px; }
+  .ai-line { display: flex; flex-direction: column; gap: 2px; }
+  .ai-label { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; color: var(--sub-light); }
+  body.dark .ai-label { color: var(--sub-dark); }
+  .ai-text { font-size: 15px; font-weight: 400; line-height: 1.45; }
+
+  .ai-error { margin-top: 14px; font-size: 13.5px; color: var(--red); }
+  .ai-disclaimer { margin-top: 16px; font-size: 11px; color: var(--sub-light); line-height: 1.4; }
+  body.dark .ai-disclaimer { color: var(--sub-dark); }
+
+  footer { text-align: center; margin-top: 20px; font-size: 11px; color: var(--sub-light); }
+  body.dark footer { color: var(--sub-dark); }
+  footer .uid { display: block; margin-top: 4px; font-size: 10px; opacity: 0.7; letter-spacing: 0.2px; }
+
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.28); backdrop-filter: blur(6px);
+    display: flex; align-items: center; justify-content: center; padding: 20px;
+    opacity: 0; pointer-events: none; transition: opacity 0.25s ease; z-index: 1000;
+  }
+  .modal-overlay.active { opacity: 1; pointer-events: all; }
+
+  .modal {
+    width: 100%; max-width: 380px;
+    background: rgba(255,255,255,0.85);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid var(--glass-border-light);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+    padding: 26px;
+    max-height: 86vh;
+    overflow-y: auto;
+    transform: translateY(8px);
+    transition: transform 0.25s ease;
+  }
+  .modal-overlay.active .modal { transform: translateY(0); }
+  body.dark .modal { background: rgba(28,28,30,0.9); border-color: var(--glass-border-dark); }
+
+  .modal h2 { margin: 0 0 18px; font-size: 18px; font-weight: 500; }
+
+  .field { margin-bottom: 16px; }
+  .field label { display: block; font-size: 12px; font-weight: 500; color: var(--sub-light); margin-bottom: 6px; }
+  body.dark .field label { color: var(--sub-dark); }
+  .field input, .field select {
+    width: 100%; min-height: 44px; border-radius: var(--radius-sm);
+    border: 1px solid rgba(60,60,67,0.15); background: rgba(255,255,255,0.7);
+    padding: 0 14px; font-size: 15px; font-family: inherit; color: inherit;
+  }
+  .field select { -webkit-appearance: none; appearance: none; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23888'><path d='M6 9l6 6 6-6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/></svg>"); background-repeat: no-repeat; background-position: right 12px center; background-size: 16px; }
+  body.dark .field input, body.dark .field select { background-color: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.12); }
+  .field small { display: block; margin-top: 6px; font-size: 11px; color: var(--sub-light); line-height: 1.4; }
+  body.dark .field small { color: var(--sub-dark); }
+
+  .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+  .btn { flex: 1; min-height: 44px; border-radius: var(--radius-sm); border: none; font-family: inherit; font-size: 15px; font-weight: 500; cursor: pointer; }
+  .btn-primary { background: var(--blue); color: #fff; }
+  .btn-primary:disabled { opacity: 0.6; cursor: default; }
+  .btn-secondary { background: rgba(120,120,128,0.14); color: inherit; }
+  body.dark .btn-secondary { background: rgba(255,255,255,0.1); }
+
+  button:focus-visible, input:focus-visible, select:focus-visible, .icon-btn:focus-visible {
+    outline: 2px solid var(--blue); outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <div class="brand">
+      <h1>Higercoin Terminal</h1>
+      <span>Celo Ağı · BTC Portföy Takibi · Cloud Edition</span>
+    </div>
+    <div class="header-actions">
+      <div class="cloud-status offline" id="cloudStatus" title="Bulut Bağlantı Durumu">
+        ☁️
+        <span class="dot"></span>
+      </div>
+      <button class="icon-btn" id="themeToggle" aria-label="Tema değiştir">🌙</button>
+      <button class="icon-btn" id="settingsBtn" aria-label="Ayarlar">⚙️</button>
+    </div>
+  </header>
+
+  <div class="status-banner" id="statusBanner"></div>
+
+  <div class="hero">
+    <div class="label">Güncel Portföy Değeri</div>
+    <div class="amount" id="portfolioValue">—</div>
+    <div class="updated" id="updatedAt"></div>
+  </div>
+
+  <div class="cards-grid">
+    <div class="card">
+      <div class="card-label">BTC/EUR Kuru</div>
+      <div class="card-value" id="btcRate">—</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Celo BTC Miktarım</div>
+      <div class="card-value" id="btcAmountDisplay">—</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Toplam Net Kâr / Zarar</div>
+      <div class="card-value" id="totalProfit">—</div>
+    </div>
+  </div>
+
+  <section class="block">
+    <div class="block-title">Zaman Makinesi</div>
+    <div class="time-machine" id="timeMachine"></div>
+  </section>
+
+  <section class="block card sparkline-card">
+    <div class="card-label">Fiyat Hareketi</div>
+    <div class="sparkline-wrap">
+      <canvas id="sparkline"></canvas>
+      <div class="sparkline-empty" id="sparklineEmpty">Grafik için veri birikiyor…</div>
+    </div>
+  </section>
+
+  <section class="block card ai-panel">
+    <div class="card-label">Yapay Zeka Analiz Merkezi</div>
+    <button class="ai-button" id="aiAnalyzeBtn">Analiz Et</button>
+    <div id="aiResult"></div>
+    <div class="ai-disclaimer">Bu analiz, girdiğiniz sayısal verilere dayanarak otomatik olarak üretilir. Yatırım tavsiyesi değildir; nihai kararlar size aittir.</div>
+  </section>
+
+  <footer>
+    Higercoin Terminal — kişisel portföy takip aracı
+    <span class="uid" id="uidLabel"></span>
+  </footer>
+</div>
+
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal">
+    <h2>Ayarlar</h2>
+    <div class="field">
+      <label for="inputBtcAmount">BTC Miktarı</label>
+      <input type="text" inputmode="decimal" id="inputBtcAmount">
+    </div>
+    <div class="field">
+      <label for="inputBaseEur">Ana Sermaye (€)</label>
+      <input type="text" inputmode="decimal" id="inputBaseEur">
+      <small>Virgül (,) veya nokta (.) kullanarak yazabilirsiniz — otomatik düzeltilir.</small>
+    </div>
+    <div class="field">
+      <label for="inputApiKey">Gemini API Key</label>
+      <input type="text" id="inputApiKey" placeholder="API anahtarınızı yapıştırın" autocomplete="off">
+      <small>Anahtar, Firebase Realtime Database üzerinde bu hesaba özel olarak saklanır.</small>
+    </div>
+    <div class="field">
+      <label for="inputModel">Gemini Modeli</label>
+      <select id="inputModel">
+        <option value="gemini-1.5-flash-latest">1.5 Flash-latest (hızlı analiz)</option>
+        <option value="gemini-1.5-pro-latest">1.5 Pro-latest (gelişmiş analiz)</option>
+        <option value="gemini-flash-latest">Flash-latest (hızlı analiz)</option>
+        <option value="gemini-pro-latest">Pro-latest (gelişmiş analiz)</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="closeSettingsBtn">İptal</button>
+      <button class="btn btn-primary" id="saveSettingsBtn">Kaydet</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  /* =========================================================================
+     HIGERCOIN TERMINAL — V3 CLOUD EDITION
+     Firebase v10 (Modular SDK) Realtime Database + Anonymous Auth entegrasyonu.
+     Tüm kalıcı veri (settings + history) artık localStorage yerine
+     Firebase RTDB üzerinden okunur/yazılır.
+     ========================================================================= */
+
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import {
+    getDatabase, ref, set, push, onValue, query, limitToLast
+  } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+  import {
+    getAuth, signInAnonymously, onAuthStateChanged
+  } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+  /* ---------- Firebase config & init ---------- */
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAYzFdvyYJNqpZI3AD1RdAI2bHYJH86mBg",
+    authDomain: "higercoin.firebaseapp.com",
+    databaseURL: "https://higercoin-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "higercoin",
+    storageBucket: "higercoin.firebasestorage.app",
+    messagingSenderId: "1052481558379",
+    appId: "1:1052481558379:web:c7fa577d5ee130b82e9e2e"
+  };
+
+  const firebaseApp = initializeApp(firebaseConfig);
+  const db = getDatabase(firebaseApp);
+  const auth = getAuth(firebaseApp);
+
+  const DEFAULTS = {
+    btcAmount: 0.00006098,
+    baseEur: 4.35,
+    geminiApiKey: "AQ.Ab8RN6IoHEeYURJf69rC5wd8YrSkMG0oUsdMfAwkkGSmUlG_Ig",
+    geminiModel: "gemini-1.5-flash-latest"
+  };
+
+  const TIME_SLOTS = [2, 4, 6, 12, 24];
+  const TOLERANCE_MS = 1.5 * 60 * 60 * 1000;
+  const SPARKLINE_POINTS = 40;
+  const HISTORY_FETCH_LIMIT = 500; // how many recent history nodes we listen to
+  const FETCH_INTERVAL_MS = 60000;
+  const BINANCE_URL = "https://api.binance.com/api/v3/ticker/price?symbol=BTCEUR";
+  const COINGECKO_URL = "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=eur";
+
+  const state = {
+    btcAmount: DEFAULTS.btcAmount,
+    baseEur: DEFAULTS.baseEur,
+    geminiApiKey: DEFAULTS.geminiApiKey,
+    geminiModel: DEFAULTS.geminiModel
+  };
+
+  let lastPrice = null;
+  let lastSource = null;
+  let pollTimer = null;
+  let resizeRaf = null;
+  let historyCache = [];       // local mirror of /history, kept sorted by timestamp
+  let settingsLoaded = false;  // becomes true once /settings has been read at least once
+  let uid = null;
+
+  const els = {};
+
+  function cacheEls() {
+    els.portfolioValue = document.getElementById('portfolioValue');
+    els.updatedAt = document.getElementById('updatedAt');
+    els.btcRate = document.getElementById('btcRate');
+    els.btcAmountDisplay = document.getElementById('btcAmountDisplay');
+    els.totalProfit = document.getElementById('totalProfit');
+    els.timeMachine = document.getElementById('timeMachine');
+    els.statusBanner = document.getElementById('statusBanner');
+    els.aiResult = document.getElementById('aiResult');
+    els.aiBtn = document.getElementById('aiAnalyzeBtn');
+    els.settingsModal = document.getElementById('settingsModal');
+    els.settingsBtn = document.getElementById('settingsBtn');
+    els.closeSettingsBtn = document.getElementById('closeSettingsBtn');
+    els.saveSettingsBtn = document.getElementById('saveSettingsBtn');
+    els.inputBtcAmount = document.getElementById('inputBtcAmount');
+    els.inputBaseEur = document.getElementById('inputBaseEur');
+    els.inputApiKey = document.getElementById('inputApiKey');
+    els.inputModel = document.getElementById('inputModel');
+    els.themeToggle = document.getElementById('themeToggle');
+    els.sparklineCanvas = document.getElementById('sparkline');
+    els.sparklineEmpty = document.getElementById('sparklineEmpty');
+    els.cloudStatus = document.getElementById('cloudStatus');
+    els.uidLabel = document.getElementById('uidLabel');
+  }
+
+  /* ---------- number sanitization (V2 kuralı korunur) ---------- */
+
+  function parseLocaleNumber(raw) {
+    if (typeof raw !== 'string') return NaN;
+    const cleaned = raw.trim().replace(',', '.');
+    return parseFloat(cleaned);
+  }
+
+  /* ---------- Cloud Sync göstergesi (☁️ pastel yeşil parlama) ---------- */
+
+  function pulseCloudSync() {
+    if (!els.cloudStatus) return;
+    els.cloudStatus.classList.add('syncing');
+    setTimeout(function () {
+      els.cloudStatus.classList.remove('syncing');
+    }, 1000);
+  }
+
+  function setCloudConnected(isConnected) {
+    if (!els.cloudStatus) return;
+    els.cloudStatus.classList.toggle('connected', isConnected);
+    els.cloudStatus.classList.toggle('offline', !isConnected);
+  }
+
+  /* ---------- Firebase: settings okuma/yazma ---------- */
+
+  function settingsRef() {
+    return ref(db, 'settings');
+  }
+
+  function historyRef() {
+    return ref(db, 'history');
+  }
+
+  // /settings düğümüne yaz (Kural 5 & 6)
+  function writeSettingsToCloud() {
+    return set(settingsRef(), {
+      btcAmount: state.btcAmount,
+      baseEur: state.baseEur,
+      geminiApiKey: state.geminiApiKey,
+      geminiModel: state.geminiModel
+    }).then(function () {
+      pulseCloudSync();
+    }).catch(function (err) {
+      console.error('Ayarlar buluta yazılamadı:', err);
+      showStatus('Ayarlar buluta kaydedilemedi: ' + err.message);
+    });
+  }
+
+  // /history düğümüne push (Kural 7)
+  function pushHistoryToCloud(timestamp, price, balance) {
+    const entry = { timestamp: timestamp, price: price, balance: balance };
+    return push(historyRef(), entry).then(function () {
+      pulseCloudSync();
+    }).catch(function (err) {
+      console.error('Geçmiş buluta yazılamadı:', err);
+    });
+  }
+
+  // /settings düğümünü dinle; veri yoksa varsayılanları yaz (Kural 6)
+  function listenSettings() {
+    onValue(settingsRef(), function (snapshot) {
+      const data = snapshot.val();
+      if (!data) {
+        // Veri yok -> varsayılanları kullan ve veritabanına yaz
+        state.btcAmount = DEFAULTS.btcAmount;
+        state.baseEur = DEFAULTS.baseEur;
+        state.geminiApiKey = DEFAULTS.geminiApiKey;
+        state.geminiModel = DEFAULTS.geminiModel;
+        writeSettingsToCloud();
+      } else {
+        state.btcAmount = (typeof data.btcAmount === 'number' && !isNaN(data.btcAmount)) ? data.btcAmount : DEFAULTS.btcAmount;
+        state.baseEur = (typeof data.baseEur === 'number' && !isNaN(data.baseEur)) ? data.baseEur : DEFAULTS.baseEur;
+        state.geminiApiKey = (typeof data.geminiApiKey === 'string') ? data.geminiApiKey : DEFAULTS.geminiApiKey;
+        state.geminiModel = (typeof data.geminiModel === 'string' && data.geminiModel) ? data.geminiModel : DEFAULTS.geminiModel;
+      }
+      settingsLoaded = true;
+      // Ayarlar her değiştiğinde (başka bir cihazdan bile olsa) ekranı tazele
+      if (lastPrice !== null) {
+        renderWithPrice(lastPrice, false);
+      }
+    }, function (err) {
+      console.error('Ayarlar okunamadı:', err);
+      showStatus('Bulut ayarları okunamadı: ' + err.message);
+    });
+  }
+
+  // /history düğümünü (son N kayıt) dinle; her güncellemede local cache'i tazele (Kural 7 & 8)
+  function listenHistory() {
+    const historyQuery = query(historyRef(), limitToLast(HISTORY_FETCH_LIMIT));
+    onValue(historyQuery, function (snapshot) {
+      const data = snapshot.val();
+      const list = [];
+      if (data) {
+        Object.keys(data).forEach(function (key) {
+          const entry = data[key];
+          if (entry && typeof entry.timestamp === 'number' && typeof entry.price === 'number') {
+            list.push({
+              timestamp: entry.timestamp,
+              price: entry.price,
+              balance: (typeof entry.balance === 'number') ? entry.balance : (state.btcAmount * entry.price)
+            });
+          }
+        });
+      }
+      list.sort(function (a, b) { return a.timestamp - b.timestamp; });
+      historyCache = list;
+
+      // Geçmiş güncellendiğinde zaman makinesini ve sparkline'ı tazele
+      if (lastPrice !== null) {
+        const balance = state.btcAmount * lastPrice;
+        renderTimeMachine(balance);
+        renderSparkline();
+      }
+    }, function (err) {
+      console.error('Geçmiş okunamadı:', err);
+      showStatus('Bulut geçmişi okunamadı: ' + err.message);
+    });
+  }
+
+  function getHistory() {
+    return historyCache;
+  }
+
+  function findClosest(hoursAgo) {
+    const history = getHistory();
+    if (!history.length) return null;
+    const targetTime = Date.now() - hoursAgo * 60 * 60 * 1000;
+    let closest = null;
+    let minDiff = Infinity;
+    for (let i = 0; i < history.length; i++) {
+      const diff = Math.abs(history[i].timestamp - targetTime);
+      if (diff < minDiff) {
+        minDiff = diff;
+        closest = history[i];
+      }
+    }
+    return (closest && minDiff <= TOLERANCE_MS) ? closest : null;
+  }
+
+  /* ---------- formatting ---------- */
+
+  function fmtEur(value, decimals) {
+    if (typeof decimals !== 'number') decimals = 4;
+    return '€' + value.toLocaleString('tr-TR', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+  }
+
+  function fmtCent(value) {
+    const sign = value >= 0 ? '+' : '';
+    return sign + value.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '¢';
+  }
+
+  function fmtTime(ts) {
+    const d = new Date(ts);
+    return d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  function animateSwap(el, newHtml, isText) {
+    el.style.opacity = '0';
+    setTimeout(function () {
+      if (isText) { el.textContent = newHtml; } else { el.innerHTML = newHtml; }
+      el.style.opacity = '1';
+    }, 220);
+  }
+
+  /* ---------- rendering ---------- */
+
+  function renderTimeMachine(currentBalance) {
+    let html = '';
+    for (let i = 0; i < TIME_SLOTS.length; i++) {
+      const hours = TIME_SLOTS[i];
+      const record = findClosest(hours);
+      html += '<div class="time-card">';
+      html += '<div class="card-label">Son ' + hours + ' Saat</div>';
+      if (record) {
+        const diffCents = (currentBalance - record.balance) * 100;
+        const cls = diffCents >= 0 ? 'positive' : 'negative';
+        html += '<div class="time-diff ' + cls + '">' + fmtCent(diffCents) + '</div>';
+      } else {
+        html += '<div class="time-diff waiting">Veri Bekleniyor</div>';
+      }
+      html += '</div>';
+    }
+    els.timeMachine.innerHTML = html;
+  }
+
+  function renderSparkline() {
+    const canvas = els.sparklineCanvas;
+    const wrap = canvas.parentElement;
+    const rect = wrap.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) return;
+
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, rect.width, rect.height);
+
+    const history = getHistory();
+    const points = history.slice(-SPARKLINE_POINTS);
+
+    if (points.length < 2) {
+      els.sparklineEmpty.style.display = 'flex';
+      return;
+    }
+    els.sparklineEmpty.style.display = 'none';
+
+    const prices = points.map(function (p) { return p.price; });
+    const min = Math.min.apply(null, prices);
+    const max = Math.max.apply(null, prices);
+    const range = (max - min) || (max * 0.001) || 1;
+    const w = rect.width, h = rect.height;
+    const padY = 10;
+    const stepX = points.length > 1 ? w / (points.length - 1) : w;
+
+    function xAt(i) { return i * stepX; }
+    function yAt(price) { return h - padY - ((price - min) / range) * (h - padY * 2); }
+
+    const isUp = prices[prices.length - 1] >= prices[0];
+    const stroke = isUp ? '#34C759' : '#FF3B30';
+    const fillTop = isUp ? 'rgba(52,199,89,0.20)' : 'rgba(255,59,48,0.20)';
+
+    ctx.beginPath();
+    ctx.moveTo(xAt(0), yAt(prices[0]));
+    for (let i = 0; i < points.length - 1; i++) {
+      const x0 = xAt(i), y0 = yAt(prices[i]);
+      const x1 = xAt(i + 1), y1 = yAt(prices[i + 1]);
+      const midX = (x0 + x1) / 2;
+      ctx.bezierCurveTo(midX, y0, midX, y1, x1, y1);
+    }
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = stroke;
+    ctx.stroke();
+
+    ctx.lineTo(xAt(points.length - 1), h);
+    ctx.lineTo(xAt(0), h);
+    ctx.closePath();
+    const gradient = ctx.createLinearGradient(0, 0, 0, h);
+    gradient.addColorStop(0, fillTop);
+    gradient.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = gradient;
+    ctx.fill();
+  }
+
+  function scheduleSparklineResize() {
+    if (resizeRaf) cancelAnimationFrame(resizeRaf);
+    resizeRaf = requestAnimationFrame(renderSparkline);
+  }
+
+  function renderWithPrice(price, pushToHistory) {
+    const balance = state.btcAmount * price;
+    const totalDiffCents = (balance - state.baseEur) * 100;
+    const now = Date.now();
+
+    if (pushToHistory) {
+      pushHistoryToCloud(now, price, balance);
+    }
+
+    animateSwap(els.portfolioValue, fmtEur(balance, 4), true);
+    animateSwap(els.btcRate, fmtEur(price, 2), true);
+    animateSwap(els.btcAmountDisplay, state.btcAmount.toFixed(8) + ' BTC', true);
+
+    els.totalProfit.classList.remove('positive', 'negative');
+    els.totalProfit.classList.add(totalDiffCents >= 0 ? 'positive' : 'negative');
+    animateSwap(els.totalProfit, fmtCent(totalDiffCents), true);
+
+    let updatedText = 'Son güncelleme: ' + fmtTime(now);
+    if (lastSource) updatedText += ' · ' + lastSource;
+    els.updatedAt.textContent = updatedText;
+
+    renderTimeMachine(balance);
+    renderSparkline();
+
+    lastPrice = price;
+  }
+
+  function showStatus(message, isInfo) {
+    if (!message) {
+      els.statusBanner.classList.remove('visible', 'info');
+      els.statusBanner.textContent = '';
+      return;
+    }
+    els.statusBanner.textContent = message;
+    els.statusBanner.classList.add('visible');
+    els.statusBanner.classList.toggle('info', !!isInfo);
+  }
+
+  /* ---------- price fetch (Binance -> CoinGecko fallback, Kural 11) ---------- */
+
+  function fetchBinance() {
+    return fetch(BINANCE_URL).then(function (res) {
+      if (!res.ok) throw new Error('Binance HTTP ' + res.status);
+      return res.json();
+    }).then(function (data) {
+      const price = parseFloat(data && data.price);
+      if (isNaN(price)) throw new Error('Binance: geçersiz fiyat verisi');
+      lastSource = 'Binance';
+      return price;
+    });
+  }
+
+  function fetchCoinGecko() {
+    return fetch(COINGECKO_URL).then(function (res) {
+      if (!res.ok) throw new Error('CoinGecko HTTP ' + res.status);
+      return res.json();
+    }).then(function (data) {
+      const price = data && data.bitcoin && data.bitcoin.eur;
+      if (typeof price !== 'number') throw new Error('CoinGecko: geçersiz fiyat verisi');
+      lastSource = 'CoinGecko (yedek)';
+      return price;
+    });
+  }
+
+  function fetchPrice() {
+    return fetchBinance().catch(function (err) {
+      console.warn('Binance başarısız, CoinGecko\'ya geçiliyor:', err.message);
+      return fetchCoinGecko();
+    });
+  }
+
+  function updateDashboard() {
+    fetchPrice().then(function (price) {
+      showStatus(null);
+      renderWithPrice(price, true);
+    }).catch(function (err) {
+      showStatus('Fiyat güncellenemedi (Binance ve CoinGecko başarısız): ' + err.message + '. Son bilinen değerler gösteriliyor.');
+    });
+  }
+
+  /* ---------- settings modal ---------- */
+
+  function openSettings() {
+    els.inputBtcAmount.value = String(state.btcAmount).replace('.', ',');
+    els.inputBaseEur.value = String(state.baseEur).replace('.', ',');
+    els.inputApiKey.value = state.geminiApiKey;
+    if (![...els.inputModel.options].some(function (o) { return o.value === state.geminiModel; })) {
+      const opt = document.createElement('option');
+      opt.value = state.geminiModel;
+      opt.textContent = state.geminiModel;
+      els.inputModel.appendChild(opt);
+    }
+    els.inputModel.value = state.geminiModel;
+    els.settingsModal.classList.add('active');
+  }
+
+  function closeSettings() {
+    els.settingsModal.classList.remove('active');
+  }
+
+  function saveSettings() {
+    const btcAmount = parseLocaleNumber(els.inputBtcAmount.value);
+    const baseEur = parseLocaleNumber(els.inputBaseEur.value);
+    const apiKey = els.inputApiKey.value.trim();
+    const model = els.inputModel.value;
+
+    if (!isNaN(btcAmount)) state.btcAmount = btcAmount;
+    if (!isNaN(baseEur)) state.baseEur = baseEur;
+    state.geminiApiKey = apiKey;
+    state.geminiModel = model;
+
+    els.saveSettingsBtn.disabled = true;
+    writeSettingsToCloud().then(function () {
+      els.saveSettingsBtn.disabled = false;
+      closeSettings();
+      if (lastPrice !== null) {
+        renderWithPrice(lastPrice, false);
+      }
+    });
+  }
+
+  /* ---------- theme ---------- */
+
+  function applyTheme(theme) {
+    document.body.classList.toggle('dark', theme === 'dark');
+    els.themeToggle.textContent = theme === 'dark' ? '☀️' : '🌙';
+  }
+
+  function toggleTheme() {
+    const current = document.body.classList.contains('dark') ? 'dark' : 'light';
+    const next = current === 'dark' ? 'light' : 'dark';
+    localStorage.setItem('higercoinTheme', next); // yalnızca UI tercihi; veri değil
+    applyTheme(next);
+  }
+
+  /* ---------- audio chime ---------- */
+
+  function playChime(direction) {
+    try {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) return;
+      const ctx = new Ctx();
+      const notes = direction === 'up' ? [660, 880] : [520, 390];
+      const t = ctx.currentTime;
+      notes.forEach(function (freq, i) {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = freq;
+        const start = t + i * 0.16;
+        gain.gain.setValueAtTime(0.0001, start);
+        gain.gain.exponentialRampToValueAtTime(0.12, start + 0.04);
+        gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.5);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(start);
+        osc.stop(start + 0.55);
+      });
+      setTimeout(function () { ctx.close(); }, 900);
+    } catch (e) { /* audio unavailable — fail silently */ }
+  }
+
+  /* ---------- Gemini AI analysis ---------- */
+
+  function buildPrompt(balance, price, totalCents, cents2h, cents12h) {
+    return [
+      'Sen deneyimli ve soğukkanlı bir kripto piyasa analiz asistanısın.',
+      'Sana verilen sayısal verilerle sınırlı kalarak kısa, teknik ve öz bir değerlendirme yap.',
+      'Kesinlik iddia etme, spekülasyon yapma; yalnızca verilen rakamları yorumla.',
+      '',
+      'Mevcut Veriler:',
+      'Portföy: €' + balance.toFixed(4),
+      'BTC Kuru: €' + price.toFixed(2),
+      'Toplam Kâr/Zarar: ' + totalCents.toFixed(2) + '¢',
+      'Son 2 Saat: ' + cents2h + '¢',
+      'Son 12 Saat: ' + cents12h + '¢',
+      '',
+      'Aşağıdaki şablonu eksiksiz doldurarak, başka hiçbir ek yorum yapmadan cevap ver:',
+      'Piyasa Yönü: [YÜKSELİŞ / DÜŞÜŞ / YATAY]',
+      'Gözlem: (verilere dayalı kısa teknik gözlem, 1-2 cümle)',
+      'Teknik Gerekçe: (cent verilerine dayalı kısa açıklama, 1-2 cümle)'
+    ].join('\n');
+  }
+
+  function formatAIResponse(text) {
+    const lines = text.split('\n').map(function (l) { return l.trim(); }).filter(Boolean);
+    let html = '<div class="ai-response">';
+    lines.forEach(function (line) {
+      const idx = line.indexOf(':');
+      if (idx > -1) {
+        const label = line.slice(0, idx).trim();
+        const value = line.slice(idx + 1).trim();
+        html += '<div class="ai-line"><span class="ai-label">' + escapeHtml(label) + '</span><span class="ai-text">' + escapeHtml(value) + '</span></div>';
+      } else {
+        html += '<div class="ai-line"><span class="ai-text">' + escapeHtml(line) + '</span></div>';
+      }
+    });
+    html += '</div>';
+    return html;
+  }
+
+  function maybePlayDirectionChime(text) {
+    // Kural 13: "SAT" veya "AL" (ya da YÜKSELİŞ/DÜŞÜŞ) yönünde chime çal
+    if (/YÜKSELİŞ|\bAL\b/i.test(text)) { playChime('up'); return; }
+    if (/DÜŞÜŞ|\bSAT\b/i.test(text)) { playChime('down'); return; }
+  }
+
+  function runAIAnalysis() {
+    if (!state.geminiApiKey) {
+      els.aiResult.innerHTML = '<div class="ai-error">Lütfen Ayarlar\'dan bir Gemini API anahtarı girin.</div>';
+      return;
+    }
+    if (lastPrice === null) {
+      els.aiResult.innerHTML = '<div class="ai-error">Henüz fiyat verisi alınamadı. Lütfen birazdan tekrar deneyin.</div>';
+      return;
+    }
+
+    els.aiBtn.disabled = true;
+    els.aiResult.innerHTML = '<div class="spinner"></div>';
+
+    const balance = state.btcAmount * lastPrice;
+    const totalCents = (balance - state.baseEur) * 100;
+    const rec2h = findClosest(2);
+    const rec12h = findClosest(12);
+    const cents2h = rec2h ? ((balance - rec2h.balance) * 100).toFixed(2) : 'Veri Yok';
+    const cents12h = rec12h ? ((balance - rec12h.balance) * 100).toFixed(2) : 'Veri Yok';
+
+    const prompt = buildPrompt(balance, lastPrice, totalCents, cents2h, cents12h);
+    // Kural 14: 404 önleme için doğru endpoint şablonu
+    const url = 'https://generativelanguage.googleapis.com/v1beta/models/' + state.geminiModel + ':generateContent?key=' + encodeURIComponent(state.geminiApiKey);
+
+    fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+    })
+      .then(function (res) {
+        if (!res.ok) throw new Error('API hatası (' + res.status + ')');
+        return res.json();
+      })
+      .then(function (data) {
+        const text = data && data.candidates && data.candidates[0] && data.candidates[0].content &&
+          data.candidates[0].content.parts && data.candidates[0].content.parts[0] && data.candidates[0].content.parts[0].text;
+        if (!text) throw new Error('Yanıt ayrıştırılamadı');
+        els.aiResult.innerHTML = formatAIResponse(text);
+        maybePlayDirectionChime(text);
+      })
+      .catch(function (err) {
+        els.aiResult.innerHTML = '<div class="ai-error">Analiz alınamadı: ' + escapeHtml(err.message) + '</div>';
+      })
+      .then(function () {
+        els.aiBtn.disabled = false;
+      });
+  }
+
+  /* ---------- Firebase Auth: anonim oturum açma ---------- */
+
+  function startFirebaseSession() {
+    onAuthStateChanged(auth, function (user) {
+      if (user) {
+        uid = user.uid;
+        els.uidLabel.textContent = 'Cihaz Kimliği: ' + uid.slice(0, 10) + '…';
+        setCloudConnected(true);
+        showStatus(null);
+
+        // Oturum açıldıktan sonra RTDB dinleyicilerini başlat
+        listenSettings();
+        listenHistory();
+
+        // İlk dashboard güncellemesini başlat (settings gelmese bile default ile çalışır)
+        updateDashboard();
+        if (!pollTimer) {
+          pollTimer = setInterval(updateDashboard, FETCH_INTERVAL_MS);
+        }
+      } else {
+        setCloudConnected(false);
+      }
+    });
+
+    signInAnonymously(auth).catch(function (err) {
+      console.error('Anonim oturum açma başarısız:', err);
+      setCloudConnected(false);
+      showStatus('Firebase oturumu açılamadı: ' + err.message + '. Bulut özellikleri devre dışı.');
+    });
+  }
+
+  /* ---------- init ---------- */
+
+  function bindEvents() {
+    els.settingsBtn.addEventListener('click', openSettings);
+    els.closeSettingsBtn.addEventListener('click', closeSettings);
+    els.settingsModal.addEventListener('click', function (e) {
+      if (e.target === els.settingsModal) closeSettings();
+    });
+    els.saveSettingsBtn.addEventListener('click', saveSettings);
+    els.themeToggle.addEventListener('click', toggleTheme);
+    els.aiBtn.addEventListener('click', runAIAnalysis);
+    window.addEventListener('resize', scheduleSparklineResize);
+    document.addEventListener('visibilitychange', function () {
+      if (document.visibilityState === 'visible' && uid) {
+        updateDashboard();
+      }
+    });
+  }
+
+  function init() {
+    cacheEls();
+    applyTheme(localStorage.getItem('higercoinTheme') || 'light');
+    bindEvents();
+    showStatus('Firebase\'e bağlanılıyor…', true);
+    startFirebaseSession();
+  }
+
+  document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
